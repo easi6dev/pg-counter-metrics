@@ -8,8 +8,9 @@
 \echo 'pg db name: ':DBNAME
 \echo 'pg endpoint: ':HOST
 \prompt 'Please provide the user_pgcm User password  :' user_pgcm_pwd
-create user sm_pgcm with login ENCRYPTED PASSWORD :'user_pgcm_pwd';
+create user user_pgcm with login ENCRYPTED PASSWORD :'user_pgcm_pwd';
 grant connect on database :DBNAME to user_pgcm;
+GRANT USAGE ON SCHEMA public TO user_pgcm;
 alter user user_pgcm connection limit 2;
 grant pg_monitor to user_pgcm;
 \du user_pgcm

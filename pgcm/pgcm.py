@@ -38,12 +38,12 @@ metric_name=rds_config.metric_name
 schema_list = tables_config.schema_list
 tables_list = tables_config.tables_list
 
-#DB connection over SSL 
+#DB connection over SSL
 #creating a global SSL context
-sslctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-sslctx.load_verify_locations(rds_config.CA_CERT)
-# to disable SSL remove # befor sslctx = None  
-# sslctx = None
+#sslctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+#sslctx.load_verify_locations(rds_config.CA_CERT)
+# to disable SSL remove # befor sslctx = None
+sslctx = None
 
 
 query_percent_towards_wraparound = "SELECT  ROUND(100*(max(age(datfrozenxid))/2000000000::float)) AS percent_towards_wraparound  from  pg_database ; "
@@ -59,7 +59,7 @@ query_deadlocks ="select count (deadlocks) from  pg_stat_database;"
 query_total_connections ="select sum (numbackends) from pg_stat_database;"
 query_max_connections = "SELECT setting::float AS max_connections FROM pg_settings WHERE name = 'max_connections';"
 query_autovacuum_freeze_max_age = "select setting::float AS autovacuum_freeze_max_age FROM pg_catalog.pg_settings WHERE name = 'autovacuum_freeze_max_age';"
-query_oldest_xid = "SELECT max(age(datfrozenxid)) oldest_current_xid FROM pg_database;"   
+query_oldest_xid = "SELECT max(age(datfrozenxid)) oldest_current_xid FROM pg_database;"
 query_autovacuum_count_per_min = "select  count(*) from pg_stat_all_tables   where to_char(last_autovacuum, 'YYYY-MM-DD hh24:MI') = to_char(STATEMENT_TIMESTAMP() , 'YYYY-MM-DD hh24:MI') ;"
 query_autovacuum_count_per_hour = "select  count(*) from pg_stat_all_tables   where to_char(last_autovacuum, 'YYYY-MM-DD hh24') = to_char(STATEMENT_TIMESTAMP() , 'YYYY-MM-DD hh24') ;"
 query_autovacuum_count_per_day = "select  count(*) from pg_stat_all_tables   where to_char(last_autovacuum, 'YYYY-MM-DD') = to_char(STATEMENT_TIMESTAMP() , 'YYYY-MM-DD') ;"
@@ -70,10 +70,10 @@ query_total_DB_size_in_GB = "select round(sum(pg_database_size(pg_database.datna
 query_Active_replication_slots = "select count (*) from pg_replication_slots where active = true;"
 query_blocked_sessions = "select count(*) from pg_stat_activity where cardinality(pg_blocking_pids(pid)) > 0 ;"
 query_wait_event = "select row_to_json(t) from (select array_to_json(array_agg(row_to_json(d))) from (SELECT coalesce(wait_event,'Cpu') as wait_event , count(*) FROM pg_stat_activity group by wait_event ) d ) t;"
-query_table_stat = """select row_to_json(t) from (select array_to_json(array_agg(row_to_json(d))) from ( 
+query_table_stat = """select row_to_json(t) from (select array_to_json(array_agg(row_to_json(d))) from (
 Select  schemaname as schema_name, relname as "Table_Name", coalesce(seq_scan,0) total_fts_scan , coalesce(idx_scan,0) total_idx_scan,
-coalesce(trunc((idx_scan::numeric/NULLIF((idx_scan::numeric+seq_scan::numeric),0)) * 100,2),0) as "IDX_scan_%", 
-coalesce(trunc((seq_scan::numeric/NULLIF((idx_scan::numeric+seq_scan::numeric),0)) * 100,2),0) as "FTS_scan_%", 
+coalesce(trunc((idx_scan::numeric/NULLIF((idx_scan::numeric+seq_scan::numeric),0)) * 100,2),0) as "IDX_scan_%",
+coalesce(trunc((seq_scan::numeric/NULLIF((idx_scan::numeric+seq_scan::numeric),0)) * 100,2),0) as "FTS_scan_%",
 coalesce(n_live_tup,0) as n_live_tup, coalesce(n_dead_tup,0) as n_dead_tup,
 coalesce(trunc((n_dead_tup::numeric/NULLIF(n_live_tup::numeric,0)) * 100,2),0) as "dead_tup_%",
 coalesce(n_tup_ins,0) as n_tup_ins,coalesce(n_tup_upd,0) as n_tup_upd, coalesce(n_tup_del,0) as n_tup_del,
@@ -87,18 +87,18 @@ where  schemaname in """ + schema_list +"""
 and relname in """ + tables_list +"""
 ) d ) t;"""
 query_oldest_open_transaction = """select coalesce(round((hs + ms + s)::numeric,2),0) as max_xact_duration_in_s
-from (select 
+from (select
 EXTRACT (HOUR FROM  max_xact_duration::time) * 60*60 as hs,
 EXTRACT (MINUTES FROM max_xact_duration::time) * 60 as ms,
 EXTRACT (SECONDS from max_xact_duration::time) as s
 from (SELECT max(now() - xact_start )
-as max_xact_duration 
-FROM pg_stat_activity 
-WHERE state = 'active' 
+as max_xact_duration
+FROM pg_stat_activity
+WHERE state = 'active'
 and xact_start is not null
 and query not like '%autovacuum:%'
 and query not like '%vacuum%') as max ) as s ;"""
-query_n_tables_eligible_for_autovacuum = """SELECT n_tables_eligible_for_autovacuum from 
+query_n_tables_eligible_for_autovacuum = """SELECT n_tables_eligible_for_autovacuum from
 ( WITH vbt AS (SELECT setting AS autovacuum_vacuum_threshold FROM pg_settings WHERE name = 'autovacuum_vacuum_threshold')
 , vsf AS (SELECT setting AS autovacuum_vacuum_scale_factor FROM pg_settings WHERE name = 'autovacuum_vacuum_scale_factor')
 , fma AS (SELECT setting AS autovacuum_freeze_max_age FROM pg_settings WHERE name = 'autovacuum_freeze_max_age')
@@ -133,13 +133,13 @@ query_Oldest_Replication_Slot_Lag_gb_behind = """select
 coalesce(max(round(pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) / 1024 / 1024 / 1024, 2)),0) AS Oldest_Replication_Slot_Lag_GB_behind
 from pg_replication_slots;"""
 query_oldest_open_idl_in_transaction = """select coalesce(round((hs + ms + s)::numeric,2),0) as max_xact_duration_in_s
-from (select 
+from (select
 EXTRACT (HOUR FROM  max_xact_duration::time) * 60*60 as hs,
 EXTRACT (MINUTES FROM max_xact_duration::time) * 60 as ms,
 EXTRACT (SECONDS from max_xact_duration::time) as s
 from (SELECT max(now() - xact_start )
-as max_xact_duration 
-FROM pg_stat_activity 
+as max_xact_duration
+FROM pg_stat_activity
 WHERE state  = 'idle in transaction'
 and xact_start is not null
 and query not like '%autovacuum:%'
@@ -150,12 +150,12 @@ coalesce(round(pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) / 1024 / 1024 
 from pg_replication_slots
 ) d ) t;"""
 query_count_replication_slots = "select count (*) from pg_replication_slots;"
-query_pg_stat_statements = """select row_to_json(t) from (select array_to_json(array_agg(row_to_json(d))) from  ( select queryid , calls, 
-round(total_time::numeric, 2) as "total_time_msec", 
-round(min_time::numeric, 2) as "min_time_msec", 
-round(max_time::numeric, 2) as "max_time_msec", 
+query_pg_stat_statements = """select row_to_json(t) from (select array_to_json(array_agg(row_to_json(d))) from  ( select queryid , calls,
+round(total_time::numeric, 2) as "total_time_msec",
+round(min_time::numeric, 2) as "min_time_msec",
+round(max_time::numeric, 2) as "max_time_msec",
 round(mean_time::numeric,2) as "avg_time_msec",
-round(stddev_time::numeric, 2) as "stddev_time_msec", 
+round(stddev_time::numeric, 2) as "stddev_time_msec",
 round(rows::numeric/calls,2) as "rows_per_exec",
 rows,
 round((100 * total_time / sum(total_time) over ())::numeric, 2) as "db_time_percent",
@@ -171,16 +171,16 @@ temp_blks_read,
 temp_blks_written,
 round(blk_read_time::numeric, 2) as"blk_read_time_msec" ,
 round(blk_write_time::numeric, 2) as "blk_write_time_msec"
-from pg_stat_statements 
+from pg_stat_statements
 order by db_time_percent desc limit 20 ) d ) t;"""
 query_pg_stat_statements_extension = "select count (*) FROM pg_catalog.pg_extension  where extname = 'pg_stat_statements';"
 query_db_load_cpu = """select coalesce(count(*),'0') as  count_of_sessions_waiting_on_CPU
-FROM pg_stat_activity 
+FROM pg_stat_activity
 where wait_event is null and state = 'active' group by wait_event ;"""
 query_db_load_none_cpu = """select coalesce(sum(count),'0') as count_of_sessions_waiting_on_None_CPU
 from (SELECT count(*) as count
-FROM pg_stat_activity  
-where wait_event is not null and state = 'active' 
+FROM pg_stat_activity
+where wait_event is not null and state = 'active'
 group by wait_event) as c;"""
 query_bgwriter_buffers_clean = 'select buffers_clean from pg_stat_bgwriter;'
 query_bgwriter_buffers_backend = 'select buffers_backend from pg_stat_bgwriter;'
@@ -194,15 +194,15 @@ logger_debug = logging.getLogger("pgcm")
 logger_debug.setLevel(logging.INFO)
 #To enable the debug mode remove the # from the below line and add # to the above line "logger_debug.setLevel(logging.INFO)"
 #logger_debug.setLevel(logging.DEBUG)
-        
+
 def handler(event, context):
     logger.info( "Starting PG metric Process on " + rds_host)
-    logger.info( "Metric Dimension Name: "+ metric_dimension_name)
+    # logger.info( "Metric Dimension Name: "+ metric_dimension_name)
     logger.info( "Database: " + db_name)
     logger.info( "Database User Name: " + name)
     logger.info( "Database Port: " + str(port))
     logger.info( "schema list: " + schema_list)
-    logger.info( "tables list: " + tables_list)    
+    logger.info( "tables list: " + tables_list)
     try:
         logger.info("-----------------------------")
         logger.info("Test the database connection")
@@ -232,7 +232,7 @@ def handler(event, context):
         logger.info("------------------------------")
         logger.info("Sarting the queries execution")
         logger.info("------------------------------")
-        
+
         logger_debug.debug("Executing result_percent_towards_wraparound")
         result_percent_towards_wraparound = executeSQL(conn, query_percent_towards_wraparound)
         logger_debug.debug("result_percent_towards_wraparound = " + str(result_percent_towards_wraparound[0][0]))
@@ -347,7 +347,7 @@ def handler(event, context):
         logger_debug.debug("Executing result_table_stat")
         if len(schema_list) == 0:
             pass
-        else:    
+        else:
             result_table_stat = executeSQL(conn, query_table_stat)
             json_result_table_stat_autovacuum_count={}
             logger_debug.debug("starting result_table_stat_autovacuum_count")
@@ -357,7 +357,7 @@ def handler(event, context):
                     #logger.info(d)
                     json_result_table_stat_autovacuum_count[d["Table_Name"]]=d["autovacuum_count"]
                     #logger.info(json_result_table_stat_autovacuum_count)
-            logger_debug.debug( "result_table_stat_autovacuum_count= " + str(json_result_table_stat_autovacuum_count))        
+            logger_debug.debug( "result_table_stat_autovacuum_count= " + str(json_result_table_stat_autovacuum_count))
             logger_debug.debug("starting result_table_stat_autoanalyze_count")
             json_result_table_stat_autoanalyze_count={}
             for k in result_table_stat[0] :
@@ -366,7 +366,7 @@ def handler(event, context):
                     #logger.info(d)
                     json_result_table_stat_autoanalyze_count[d["Table_Name"]]=d["autoanalyze_count"]
                     #logger.info(json_result_table_stat_autoanalyze_count)
-            logger_debug.debug( "result_table_stat_autoanalyze_count= " + str(json_result_table_stat_autoanalyze_count))        
+            logger_debug.debug( "result_table_stat_autoanalyze_count= " + str(json_result_table_stat_autoanalyze_count))
             json_result_table_stat_n_dead_tup={}
             logger_debug.debug("starting result_table_stat_n_dead_tup")
             for k in result_table_stat[0] :
@@ -375,7 +375,7 @@ def handler(event, context):
                     #logger.info(d)
                     json_result_table_stat_n_dead_tup[d["Table_Name"]]=d["n_dead_tup"]
                     #logger.info(json_result_table_stat_n_dead_tup)
-            logger_debug.debug( "result_table_stat_n_dead_tup= " + str(json_result_table_stat_n_dead_tup))         
+            logger_debug.debug( "result_table_stat_n_dead_tup= " + str(json_result_table_stat_n_dead_tup))
             logger_debug.debug("starting result_table_stat_n_live_tup")
             json_result_table_stat_n_live_tup={}
             for k in result_table_stat[0] :
@@ -507,7 +507,7 @@ def handler(event, context):
                 json_result_lock_mode[d["lock_mode"]]=d["count"]
                 #logger.info(json_result_lock_mode)
         logger_debug.debug( "result_lock_mode= " + str(json_result_lock_mode))
-        
+
         logger_debug.debug("Executing result_lock_type")
         result_lock_type = executeSQL(conn, query_lock_type)
         json_result_lock_type ={}
@@ -558,7 +558,7 @@ def handler(event, context):
         logger_debug.debug("Executing result_checkpoints_timed")
         result_checkpoints_timed = executeSQL(conn, query_checkpoints_timed)
         logger_debug.debug("result_checkpoints_timed = " + str(result_checkpoints_timed[0][0]))
-   
+
         logger_debug.debug("Executing result_Oldest_Replication_Slot_Lag_gb_behind")
         result_Oldest_Replication_Slot_Lag_gb_behind = executeSQL(conn, query_Oldest_Replication_Slot_Lag_gb_behind)
         logger_debug.debug("result_Oldest_Replication_Slot_Lag_gb_behind = " + str(result_Oldest_Replication_Slot_Lag_gb_behind[0][0]))
@@ -570,10 +570,10 @@ def handler(event, context):
         logger_debug.debug("Executing result_count_replication_slots")
         result_count_replication_slots = executeSQL(conn, query_count_replication_slots)
         logger_debug.debug("result_count_replication_slots = " + str(result_count_replication_slots[0][0]))
- 
+
         logger_debug.debug("Executing result_Oldest_Replication_Slot_Lag_gb_behind_per_slot")
         result_Oldest_Replication_Slot_Lag_gb_behind_per_slot = executeSQL(conn, query_Oldest_Replication_Slot_Lag_gb_behind_per_slot)
-        if result_count_replication_slots[0][0] > 0: 
+        if result_count_replication_slots[0][0] > 0:
            json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot={}
            for k in result_Oldest_Replication_Slot_Lag_gb_behind_per_slot[0] :
                 #logger.info(k)
@@ -588,7 +588,7 @@ def handler(event, context):
         logger_debug.debug("Executing result_pg_stat_statements_extension")
         result_pg_stat_statements_extension = executeSQL(conn, query_pg_stat_statements_extension)
         logger_debug.debug("result_pg_stat_statements_extension = " + str(result_pg_stat_statements_extension[0][0]))
-        
+
         logger_debug.debug("Executing result_pg_stat_statements")
         if result_pg_stat_statements_extension[0][0] == 0:
             logger_debug.debug("---------> pg_stat_statements extension is not enabled")
@@ -601,7 +601,7 @@ def handler(event, context):
             for k in result_pg_stat_statements[0] :
                 for d in k['array_to_json']:
                     json_result_pg_stat_statements_calls[d["queryid"]]=d["calls"]
-            logger_debug.debug( "json_result_pg_stat_statements_calls= " + str(json_result_pg_stat_statements_calls))     
+            logger_debug.debug( "json_result_pg_stat_statements_calls= " + str(json_result_pg_stat_statements_calls))
             json_result_pg_stat_statements_total_time_msec={}
             logger_debug.debug("starting result_pg_stat_statements_total_time_msec")
             for k in result_pg_stat_statements[0] :
@@ -1207,7 +1207,7 @@ def handler(event, context):
         )
         if len(schema_list) == 0:
             pass
-        else:    
+        else:
             logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_autovacuum_count")
             for k in json_result_table_stat_autovacuum_count:
                 Table_Name=k
@@ -2393,9 +2393,9 @@ def handler(event, context):
     finally:
         if conn is not None:
             conn.close()
-    logger.info("SUCCESS: PG Counter Metrics") 
+    logger.info("SUCCESS: PG Counter Metrics")
     return "SUCCESS: PG Counter Metrics"
-    
+
 def executeSQL(connection, sqlString, bindHash={}, supress=False):
     """
     A wrapper for SQL execution, handling exceptions, and managing
@@ -2417,7 +2417,7 @@ def executeSQL(connection, sqlString, bindHash={}, supress=False):
         cursor = connection.cursor()
         cursor.execute(timeoutString)
         cursor.execute(sqlString, bindHash)
-        try: 
+        try:
             if isSelect:
                 results = cursor.fetchall()
         except:
@@ -2466,11 +2466,11 @@ def get_secret():
         service_name='secretsmanager',
         region_name=region
     )
-    
+
     # In this sample we only handle the specific exceptions for the 'GetSecretValue' API.
     # See https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
     # We rethrow the exception by default.
-    
+
     try:
         logger.info("start  get_secret_value_response ")
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
