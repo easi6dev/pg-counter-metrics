@@ -1311,12 +1311,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_autovacuum_count_"+Table_Name ,
+                        'MetricName': "table_stat_autovacuum_count",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': autovacuum_count
@@ -1332,12 +1336,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_autoanalyze_count_"+Table_Name ,
+                        'MetricName': "table_stat_autoanalyze_count",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': autoanalyze_count
@@ -1353,12 +1361,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_n_dead_tup_"+Table_Name ,
+                        'MetricName': "table_stat_n_dead_tup",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': n_dead_tup
@@ -1374,12 +1386,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_n_live_tup_"+Table_Name ,
+                        'MetricName': "table_stat_n_live_tup",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': n_live_tup
@@ -1395,12 +1411,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_dead_tup_percent_"+Table_Name ,
+                        'MetricName': "table_stat_dead_tup_percent",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Percent',
                         'Value': dead_tup_percent
@@ -1416,12 +1436,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_total_fts_scan_"+Table_Name ,
+                        'MetricName': "table_stat_total_fts_scan",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': total_fts_scan
@@ -1437,12 +1461,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_total_idx_scan_"+Table_Name ,
+                        'MetricName': "table_stat_total_idx_scan",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': total_idx_scan
@@ -1458,12 +1486,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_n_tup_ins_"+Table_Name ,
+                        'MetricName': "table_stat_n_tup_ins",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': n_tup_ins
@@ -1479,12 +1511,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_n_tup_upd_"+Table_Name ,
+                        'MetricName': "table_stat_n_tup_upd",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': n_tup_upd
@@ -1500,12 +1536,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_n_tup_del_"+Table_Name ,
+                        'MetricName': "table_stat_n_tup_del_",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': n_tup_del
@@ -1521,12 +1561,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_n_mod_since_analyze_"+Table_Name ,
+                        'MetricName': "table_stat_n_mod_since_analyze",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': n_mod_since_analyze
@@ -1542,12 +1586,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_n_tup_hot_upd_"+Table_Name ,
+                        'MetricName': "table_stat_n_tup_hot_upd",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': n_tup_hot_upd
@@ -1563,12 +1611,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_tup_ins_precent_"+Table_Name ,
+                        'MetricName': "table_stat_tup_ins_precent",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Percent',
                         'Value': tup_ins_precent
@@ -1584,12 +1636,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_tup_upd_precent_"+Table_Name ,
+                        'MetricName': "table_stat_tup_upd_precent",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Percent',
                         'Value': tup_upd_precent
@@ -1605,12 +1661,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "table_stat_tup_del_precent_"+Table_Name ,
+                        'MetricName': "table_stat_tup_del_precent",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
                         ],
                         'Unit': 'Percent',
                         'Value': tup_del_precent
