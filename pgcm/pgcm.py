@@ -72,6 +72,8 @@ query_blocked_sessions = "select count(*) from pg_stat_activity where cardinalit
 query_wait_event = "select row_to_json(t) from (select array_to_json(array_agg(row_to_json(d))) from (SELECT coalesce(wait_event,'Cpu') as wait_event , count(*) FROM pg_stat_activity group by wait_event ) d ) t;"
 query_table_stat = """select row_to_json(t) from (select array_to_json(array_agg(row_to_json(d))) from (
 Select  schemaname as schema_name, relname as "Table_Name", coalesce(seq_scan,0) total_fts_scan , coalesce(idx_scan,0) total_idx_scan,
+coalesce(seq_tup_read, 0) as seq_tup_read,
+coalesce(idx_tup_fetch, 0) as idx_tup_fetch,
 coalesce(trunc((idx_scan::numeric/NULLIF((idx_scan::numeric+seq_scan::numeric),0)) * 100,2),0) as "IDX_scan_%",
 coalesce(trunc((seq_scan::numeric/NULLIF((idx_scan::numeric+seq_scan::numeric),0)) * 100,2),0) as "FTS_scan_%",
 coalesce(n_live_tup,0) as n_live_tup, coalesce(n_dead_tup,0) as n_dead_tup,
@@ -150,7 +152,7 @@ coalesce(round(pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) / 1024 / 1024 
 from pg_replication_slots
 ) d ) t;"""
 query_count_replication_slots = "select count (*) from pg_replication_slots;"
-query_pg_stat_statements = """select row_to_json(t) from (select array_to_json(array_agg(row_to_json(d))) from  ( select queryid , calls,
+query_pg_stat_statements = """SELECT row_to_json(t) FROM (SELECT array_to_json(array_agg(row_to_json(d))) FROM (SELECT queryid , calls,
 round(total_time::numeric, 2) as "total_time_msec",
 round(min_time::numeric, 2) as "min_time_msec",
 round(max_time::numeric, 2) as "max_time_msec",
@@ -171,8 +173,11 @@ temp_blks_read,
 temp_blks_written,
 round(blk_read_time::numeric, 2) as"blk_read_time_msec" ,
 round(blk_write_time::numeric, 2) as "blk_write_time_msec"
-from pg_stat_statements
-order by db_time_percent desc limit 20 ) d ) t;"""
+FROM pg_stat_statements pss
+JOIN pg_database pd ON pss.dbid = pd.oid
+JOIN pg_roles pr ON pss.userid = pr.oid
+WHERE pd.datname ='tada_ride_service' AND pr.rolname = 'postgreadmin'
+ORDER BY db_time_percent DESC LIMIT 50 ) d ) t;"""
 query_pg_stat_statements_extension = "select count (*) FROM pg_catalog.pg_extension  where extname = 'pg_stat_statements';"
 query_db_load_cpu = """select coalesce(count(*),'0') as  count_of_sessions_waiting_on_CPU
 FROM pg_stat_activity
@@ -280,6 +285,8 @@ where nspname in """ + schema_list + """
 and tblname in """ + tables_list +"""
 ORDER BY bloat_Size desc, nspname, tblname, idxname; """
 
+query_ride_entity_index_stat = """select indexrelname, idx_tup_fetch, idx_tup_read
+from pg_stat_user_indexes where (relname = 'ride_entity_part_2023q3q4' OR relname='ride_entity_p_2024t1_sg' OR relname='ride_entity_p_2024t1_other') order by idx_tup_read"""
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -323,60 +330,60 @@ def handler(event, context):
     logger.info("SUCCESS: Connection to RDS postgres instance succeeded")
     try:
         logger.info("------------------------------")
-        logger.info("Sarting the queries execution")
+        logger.info("Starting the queries execution")
         logger.info("------------------------------")
 
-        logger_debug.debug("Executing result_percent_towards_wraparound")
-        result_percent_towards_wraparound = executeSQL(conn, query_percent_towards_wraparound)
-        logger_debug.debug("result_percent_towards_wraparound = " + str(result_percent_towards_wraparound[0][0]))
+        # logger_debug.debug("Executing result_percent_towards_wraparound")
+        # result_percent_towards_wraparound = executeSQL(conn, query_percent_towards_wraparound)
+        # logger_debug.debug("result_percent_towards_wraparound = " + str(result_percent_towards_wraparound[0][0]))
 
-        logger_debug.debug("Executing result_queries_canceled_due_to_lock_timeouts")
-        result_queries_canceled_due_to_lock_timeouts  = executeSQL(conn, query_queries_canceled_due_to_lock_timeouts)
-        logger_debug.debug("result_queries_canceled_due_to_lock_timeouts = " + str(result_queries_canceled_due_to_lock_timeouts[0][0]))
+        # logger_debug.debug("Executing result_queries_canceled_due_to_lock_timeouts")
+        # result_queries_canceled_due_to_lock_timeouts = executeSQL(conn, query_queries_canceled_due_to_lock_timeouts)
+        # logger_debug.debug("result_queries_canceled_due_to_lock_timeouts = " + str(result_queries_canceled_due_to_lock_timeouts[0][0]))
 
-        logger_debug.debug("Executing result_queries_canceled_due_to_lock_deadlocks")
-        result_queries_canceled_due_to_lock_deadlocks =  executeSQL(conn, query_queries_canceled_due_to_lock_deadlocks)
-        logger_debug.debug("result_queries_canceled_due_to_lock_deadlocks = " + str(result_queries_canceled_due_to_lock_deadlocks[0][0]))
+        # logger_debug.debug("Executing result_queries_canceled_due_to_lock_deadlocks")
+        # result_queries_canceled_due_to_lock_deadlocks = executeSQL(conn, query_queries_canceled_due_to_lock_deadlocks)
+        # logger_debug.debug("result_queries_canceled_due_to_lock_deadlocks = " + str(result_queries_canceled_due_to_lock_deadlocks[0][0]))
 
-        logger_debug.debug("Executing result_idle_in_transaction_sessions")
-        result_idle_in_transaction_sessions = executeSQL(conn, query_idle_in_transaction_sessions)
-        logger_debug.debug("result_idle_in_transaction_sessions = " + str(result_idle_in_transaction_sessions[0][0]))
+        # logger_debug.debug("Executing result_idle_in_transaction_sessions")
+        # result_idle_in_transaction_sessions = executeSQL(conn, query_idle_in_transaction_sessions)
+        # logger_debug.debug("result_idle_in_transaction_sessions = " + str(result_idle_in_transaction_sessions[0][0]))
 
-        logger_debug.debug("Executing result_idle_sessions")
-        result_idle_sessions = executeSQL(conn, query_idle_sessions)
-        logger_debug.debug("result_idle_sessions = " + str(result_idle_sessions[0][0]))
+        # logger_debug.debug("Executing result_idle_sessions")
+        # result_idle_sessions = executeSQL(conn, query_idle_sessions)
+        # logger_debug.debug("result_idle_sessions = " + str(result_idle_sessions[0][0]))
 
-        logger_debug.debug("Executing result_idle_in_transaction_aborted_sessions")
-        result_idle_in_transaction_aborted_sessions = executeSQL(conn, query_idle_in_transaction_aborted_sessions)
-        logger_debug.debug("result_idle_in_transaction_aborted_sessions = " + str(result_idle_in_transaction_aborted_sessions[0][0]))
+        # logger_debug.debug("Executing result_idle_in_transaction_aborted_sessions")
+        # result_idle_in_transaction_aborted_sessions = executeSQL(conn, query_idle_in_transaction_aborted_sessions)
+        # logger_debug.debug("result_idle_in_transaction_aborted_sessions = " + str(result_idle_in_transaction_aborted_sessions[0][0]))
 
-        logger_debug.debug("Executing result_active_sessions")
-        result_active_sessions = executeSQL(conn, query_active_sessions)
-        logger_debug.debug("result_active_sessions = " + str(result_active_sessions[0][0]))
+        # logger_debug.debug("Executing result_active_sessions")
+        # result_active_sessions = executeSQL(conn, query_active_sessions)
+        # logger_debug.debug("result_active_sessions = " + str(result_active_sessions[0][0]))
 
-        logger_debug.debug("Executing result_Inactive_replication_slot")
-        result_Inactive_replication_slot = executeSQL(conn, query_Inactive_replication_slots)
-        logger_debug.debug("result_Inactive_replication_slot = " + str(result_Inactive_replication_slot[0][0]))
+        # logger_debug.debug("Executing result_Inactive_replication_slot")
+        # result_Inactive_replication_slot = executeSQL(conn, query_Inactive_replication_slots)
+        # logger_debug.debug("result_Inactive_replication_slot = " + str(result_Inactive_replication_slot[0][0]))
 
-        logger_debug.debug("Executing result_invalid_indexes")
-        result_invalid_indexes = executeSQL(conn, query_invalid_indexes)
-        logger_debug.debug("result_invalid_indexes = " + str(result_invalid_indexes[0][0]))
+        # logger_debug.debug("Executing result_invalid_indexes")
+        # result_invalid_indexes = executeSQL(conn, query_invalid_indexes)
+        # logger_debug.debug("result_invalid_indexes = " + str(result_invalid_indexes[0][0]))
 
-        logger_debug.debug("Executing result_deadlocks")
-        result_deadlocks = executeSQL(conn, query_deadlocks)
-        logger_debug.debug("result_deadlocks = " + str(result_deadlocks[0][0]))
+        # logger_debug.debug("Executing result_deadlocks")
+        # result_deadlocks = executeSQL(conn, query_deadlocks)
+        # logger_debug.debug("result_deadlocks = " + str(result_deadlocks[0][0]))
 
-        logger_debug.debug("Executing result_total_connections")
-        result_total_connections = executeSQL(conn, query_total_connections)
-        logger_debug.debug("result_total_connections = " + str(result_total_connections[0][0]))
+        # logger_debug.debug("Executing result_total_connections")
+        # result_total_connections = executeSQL(conn, query_total_connections)
+        # logger_debug.debug("result_total_connections = " + str(result_total_connections[0][0]))
 
-        logger_debug.debug("Executing result_max_connections")
-        result_max_connections = executeSQL(conn, query_max_connections)
-        logger_debug.debug("result_max_connections = " + str(result_max_connections[0][0]))
+        # logger_debug.debug("Executing result_max_connections")
+        # result_max_connections = executeSQL(conn, query_max_connections)
+        # logger_debug.debug("result_max_connections = " + str(result_max_connections[0][0]))
 
-        logger_debug.debug("Executing result_connections_utilization")
-        result_connections_utilization = round(100*( result_total_connections[0][0] / result_max_connections[0][0]  ),2)
-        logger_debug.debug("result_connections_utilization = " + str(result_connections_utilization))
+        # logger_debug.debug("Executing result_connections_utilization")
+        # result_connections_utilization = round(100*( result_total_connections[0][0] / result_max_connections[0][0]  ),2)
+        # logger_debug.debug("result_connections_utilization = " + str(result_connections_utilization))
 
         logger_debug.debug("Executing result_autovacuum_freeze_max_age")
         result_autovacuum_freeze_max_age = executeSQL(conn, query_autovacuum_freeze_max_age)
@@ -414,13 +421,13 @@ def handler(event, context):
         result_autoanalyze_count_per_day = executeSQL(conn, query_autoanalyze_count_per_day)
         logger_debug.debug("result_autoanalyze_count_per_day = " + str(result_autoanalyze_count_per_day[0][0]))
 
-        logger_debug.debug("Executing result_total_DB_size_in_GB")
-        result_total_DB_size_in_GB = executeSQL(conn, query_total_DB_size_in_GB)
-        logger_debug.debug("result_total_DB_size_in_GB = " + str(result_total_DB_size_in_GB[0][0]))
+        # logger_debug.debug("Executing result_total_DB_size_in_GB")
+        # result_total_DB_size_in_GB = executeSQL(conn, query_total_DB_size_in_GB)
+        # logger_debug.debug("result_total_DB_size_in_GB = " + str(result_total_DB_size_in_GB[0][0]))
 
-        logger_debug.debug("Executing result_Active_replication_slot")
-        result_Active_replication_slot = executeSQL(conn, query_Active_replication_slots)
-        logger_debug.debug("result_Active_replication_slot = " + str(result_Active_replication_slot[0][0]))
+        # logger_debug.debug("Executing result_Active_replication_slot")
+        # result_Active_replication_slot = executeSQL(conn, query_Active_replication_slots)
+        # logger_debug.debug("result_Active_replication_slot = " + str(result_Active_replication_slot[0][0]))
 
         logger_debug.debug("Executing result_blocked_sessions")
         result_blocked_sessions = executeSQL(conn, query_blocked_sessions)
@@ -506,6 +513,17 @@ def handler(event, context):
                     #logger.info(json_result_table_stat_total_idx_scan)
             logger_debug.debug( "result_table_stat_total_idx_scan= " + str(json_result_table_stat_total_idx_scan))
             logger_debug.debug("starting result_table_stat_n_tup_ins")
+
+            json_result_table_stat_idx_tup_fetch={}
+            for k in result_table_stat[0] :
+                for d in k['array_to_json']:
+                    json_result_table_stat_idx_tup_fetch[d["Table_Name"]]=d["idx_tup_fetch"]
+
+            json_result_table_stat_seq_tup_read={}
+            for k in result_table_stat[0] :
+                for d in k['array_to_json']:
+                    json_result_table_stat_seq_tup_read[d["Table_Name"]]=d["seq_tup_read"]
+
             json_result_table_stat_n_tup_ins={}
             for k in result_table_stat[0] :
                 #logger.info(k)
@@ -664,19 +682,19 @@ def handler(event, context):
         result_count_replication_slots = executeSQL(conn, query_count_replication_slots)
         logger_debug.debug("result_count_replication_slots = " + str(result_count_replication_slots[0][0]))
 
-        logger_debug.debug("Executing result_Oldest_Replication_Slot_Lag_gb_behind_per_slot")
-        result_Oldest_Replication_Slot_Lag_gb_behind_per_slot = executeSQL(conn, query_Oldest_Replication_Slot_Lag_gb_behind_per_slot)
-        if result_count_replication_slots[0][0] > 0:
-           json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot={}
-           for k in result_Oldest_Replication_Slot_Lag_gb_behind_per_slot[0] :
-                #logger.info(k)
-                for d in k['array_to_json']:
-                   #logger.info(d)
-                   json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot[d["slot_name"]]=d["oldest_replication_slot_lag_gb_behind"]
-           logger_debug.debug("json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot = " + str(json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot))
-        else:
-            logger_debug.debug("---------> there is no Replication Slots in the Database")
-            pass
+        # logger_debug.debug("Executing result_Oldest_Replication_Slot_Lag_gb_behind_per_slot")
+        # result_Oldest_Replication_Slot_Lag_gb_behind_per_slot = executeSQL(conn, query_Oldest_Replication_Slot_Lag_gb_behind_per_slot)
+        # if result_count_replication_slots[0][0] > 0:
+        #    json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot={}
+        #    for k in result_Oldest_Replication_Slot_Lag_gb_behind_per_slot[0] :
+        #         #logger.info(k)
+        #         for d in k['array_to_json']:
+        #            #logger.info(d)
+        #            json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot[d["slot_name"]]=d["oldest_replication_slot_lag_gb_behind"]
+        #    logger_debug.debug("json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot = " + str(json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot))
+        # else:
+        #     logger_debug.debug("---------> there is no Replication Slots in the Database")
+        #     pass
 
         logger_debug.debug("Executing result_pg_stat_statements_extension")
         result_pg_stat_statements_extension = executeSQL(conn, query_pg_stat_statements_extension)
@@ -815,35 +833,37 @@ def handler(event, context):
                 for d in k['array_to_json']:
                     json_result_pg_stat_statements_blk_write_time_msec[d["queryid"]]=d["blk_write_time_msec"]
             logger_debug.debug( "json_result_pg_stat_statements_blk_write_time_msec= " + str(json_result_pg_stat_statements_blk_write_time_msec))
-        logger_debug.debug("Executing result_db_load_cpu")
-        result_db_load_cpu = executeSQL(conn, query_db_load_cpu)
-        logger_debug.debug("result_db_load_cpu = " + str(result_db_load_cpu[0][0]))
+        # logger_debug.debug("Executing result_db_load_cpu")
+        # result_db_load_cpu = executeSQL(conn, query_db_load_cpu)
+        # logger_debug.debug("result_db_load_cpu = " + str(result_db_load_cpu[0][0]))
 
-        logger_debug.debug("Executing result_db_load_none_cpu")
-        result_db_load_none_cpu = executeSQL(conn, query_db_load_none_cpu)
-        logger_debug.debug("result_db_load_none_cpu = " + str(result_db_load_none_cpu[0][0]))
+        # logger_debug.debug("Executing result_db_load_none_cpu")
+        # result_db_load_none_cpu = executeSQL(conn, query_db_load_none_cpu)
+        # logger_debug.debug("result_db_load_none_cpu = " + str(result_db_load_none_cpu[0][0]))
 
-        logger_debug.debug("Executing result_bgwriter_buffers_clean")
-        result_bgwriter_buffers_clean = executeSQL(conn, query_bgwriter_buffers_clean)
-        logger_debug.debug("result_bgwriter_buffers_clean = " + str(result_bgwriter_buffers_clean[0][0]))
-
-        logger_debug.debug("Executing result_bgwriter_buffers_backend")
-        result_bgwriter_buffers_backend = executeSQL(conn, query_bgwriter_buffers_backend)
-        logger_debug.debug("result_bgwriter_buffers_backend = " + str(result_bgwriter_buffers_backend[0][0]))
-
-        logger_debug.debug("Executing result_bgwriter_maxwritten_clean")
-        result_bgwriter_maxwritten_clean = executeSQL(conn, query_bgwriter_maxwritten_clean)
-        logger_debug.debug("result_bgwriter_maxwritten_clean = " + str(result_bgwriter_maxwritten_clean[0][0]))
-
-        logger_debug.debug("Executing result_oldest_mxid")
-        result_oldest_mxid = executeSQL(conn, query_oldest_mxid)
-        logger_debug.debug("result_oldest_mxid = " + str(result_oldest_mxid[0][0]))
+        # logger_debug.debug("Executing result_bgwriter_buffers_clean")
+        # result_bgwriter_buffers_clean = executeSQL(conn, query_bgwriter_buffers_clean)
+        # logger_debug.debug("result_bgwriter_buffers_clean = " + str(result_bgwriter_buffers_clean[0][0]))
+        #
+        # logger_debug.debug("Executing result_bgwriter_buffers_backend")
+        # result_bgwriter_buffers_backend = executeSQL(conn, query_bgwriter_buffers_backend)
+        # logger_debug.debug("result_bgwriter_buffers_backend = " + str(result_bgwriter_buffers_backend[0][0]))
+        #
+        # logger_debug.debug("Executing result_bgwriter_maxwritten_clean")
+        # result_bgwriter_maxwritten_clean = executeSQL(conn, query_bgwriter_maxwritten_clean)
+        # logger_debug.debug("result_bgwriter_maxwritten_clean = " + str(result_bgwriter_maxwritten_clean[0][0]))
+        #
+        # logger_debug.debug("Executing result_oldest_mxid")
+        # result_oldest_mxid = executeSQL(conn, query_oldest_mxid)
+        # logger_debug.debug("result_oldest_mxid = " + str(result_oldest_mxid[0][0]))
 
         logger_debug.debug("Executing result_autovacuum_multixact_freeze_max_age")
         result_autovacuum_multixact_freeze_max_age = executeSQL(conn, query_autovacuum_multixact_freeze_max_age)
         logger_debug.debug("result_autovacuum_multixact_freeze_max_age = " + str(result_autovacuum_multixact_freeze_max_age[0][0]))
 
         result_index_stat = executeSQL(conn, query_index_stat)
+
+        result_ride_entity_index_stat = executeSQL(conn, query_ride_entity_index_stat)
 
         logger.info("------------------------------")
         logger.info("the queries execution finished")
@@ -854,227 +874,227 @@ def handler(event, context):
         logger.info("-------------------------------------")
         cloudwatch = boto3.client('cloudwatch')
         # Put Counter custom metrics
-        logger_debug.debug("starting  cloudwatch.put_metric_data.result_percent_towards_wraparound")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'Xid_Percent_Towards_Wraparound',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Percent',
-                    'Value': result_percent_towards_wraparound[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.queries_canceled_due_to_lock_timeout")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'queries_canceled_due_to_lock_timeouts',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_queries_canceled_due_to_lock_timeouts[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.queries_canceled_due_to_lock_deadlocks")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'queries_canceled_due_to_lock_deadlocks',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_queries_canceled_due_to_lock_deadlocks[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.idle_in_transaction_sessions")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'idle_in_transaction_sessions',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_idle_in_transaction_sessions[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.idle_sessions")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'idle_sessions',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_idle_sessions[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.idle_in_transaction_aborted_sessions")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'idle_in_transaction_aborted_sessions',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_idle_in_transaction_aborted_sessions[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.active_sessions")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'active_sessions',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_active_sessions[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.Inactive_replication_slot")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'Inactive_replication_slot',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_Inactive_replication_slot[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.invalid_indexes")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'invalid_indexes',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_invalid_indexes[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.deadlocks")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'deadlocks',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_deadlocks[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.total_connections")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'total_connections',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_total_connections[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.max_connections")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'max_connections',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_max_connections[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.connections_utilization")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'connections_utilization',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Percent',
-                    'Value': result_connections_utilization
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.result_percent_towards_wraparound")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'Xid_Percent_Towards_Wraparound',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Percent',
+        #             'Value': result_percent_towards_wraparound[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.queries_canceled_due_to_lock_timeout")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'queries_canceled_due_to_lock_timeouts',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_queries_canceled_due_to_lock_timeouts[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.queries_canceled_due_to_lock_deadlocks")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'queries_canceled_due_to_lock_deadlocks',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_queries_canceled_due_to_lock_deadlocks[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.idle_in_transaction_sessions")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'idle_in_transaction_sessions',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_idle_in_transaction_sessions[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.idle_sessions")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'idle_sessions',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_idle_sessions[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.idle_in_transaction_aborted_sessions")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'idle_in_transaction_aborted_sessions',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_idle_in_transaction_aborted_sessions[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.active_sessions")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'active_sessions',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_active_sessions[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.Inactive_replication_slot")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'Inactive_replication_slot',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_Inactive_replication_slot[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.invalid_indexes")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'invalid_indexes',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_invalid_indexes[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.deadlocks")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'deadlocks',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_deadlocks[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.total_connections")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'total_connections',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_total_connections[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.max_connections")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'max_connections',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_max_connections[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.connections_utilization")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'connections_utilization',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Percent',
+        #             'Value': result_connections_utilization
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
         logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_freeze_max_age")
         cloudwatch.put_metric_data(
             MetricData=[
@@ -1228,40 +1248,40 @@ def handler(event, context):
             ],
             Namespace='PG Counter Metrics'
         )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.total_DB_size_in_GB")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'total_DB_size_in_GB',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Gigabits',
-                    'Value': result_total_DB_size_in_GB[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.Active_replication_slot")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'Active_replication_slot',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_Active_replication_slot[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.total_DB_size_in_GB")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'total_DB_size_in_GB',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Gigabits',
+        #             'Value': result_total_DB_size_in_GB[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.Active_replication_slot")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'Active_replication_slot',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_Active_replication_slot[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
         logger_debug.debug("starting  cloudwatch.put_metric_data.blocked_sessions")
         cloudwatch.put_metric_data(
             MetricData=[
@@ -1479,6 +1499,57 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
             logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_tup_ins")
+
+            for k in json_result_table_stat_seq_tup_read:
+                Table_Name=k
+                seq_tup_read=json_result_table_stat_seq_tup_read[k]
+                #logger.info(Table_Name)
+                cloudwatch.put_metric_data(
+                MetricData=[
+                    {
+                        'MetricName': "table_stat_seq_tup_read",
+                        'Dimensions': [
+                            {
+                                'Name': 'DBInstanceIdentifier',
+                                'Value': rds_config.metric_name
+                            },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
+                        ],
+                        'Unit': 'Count',
+                        'Value': seq_tup_read
+                    },
+                ],
+                Namespace='PG Counter Metrics'
+            )
+
+            for k in json_result_table_stat_idx_tup_fetch:
+                Table_Name=k
+                idx_tup_fetch=json_result_table_stat_idx_tup_fetch[k]
+                #logger.info(Table_Name)
+                cloudwatch.put_metric_data(
+                MetricData=[
+                    {
+                        'MetricName': "table_stat_idx_tup_fetch",
+                        'Dimensions': [
+                            {
+                                'Name': 'DBInstanceIdentifier',
+                                'Value': rds_config.metric_name
+                            },
+                            {
+                                'Name': 'TableName',
+                                'Value': Table_Name
+                            }
+                        ],
+                        'Unit': 'Count',
+                        'Value': idx_tup_fetch
+                    },
+                ],
+                Namespace='PG Counter Metrics'
+            )
+
             for k in json_result_table_stat_n_tup_ins:
                 Table_Name=k
                 n_tup_ins=json_result_table_stat_n_tup_ins[k]
@@ -1813,6 +1884,56 @@ def handler(event, context):
                     Namespace='PG Counter Metrics'
                 )
 
+            for row in result_ride_entity_index_stat:
+                idxname = row[0]
+                idx_tup_fetch = row[1]
+                idx_tup_read = row[2]
+
+                cloudwatch.put_metric_data(
+                    MetricData=[
+                        {
+                            'MetricName': 'ride_entity_index_stat_tup_fetch',
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'TableName',
+                                    'Value': 'ride_entity'
+                                },
+                                {
+                                    'Name': 'IndexName',
+                                    'Value': idxname
+                                },
+                            ],
+                            'Unit': 'Count',
+                            'Value': idx_tup_fetch
+                        },
+                        {
+                            'MetricName': 'ride_entity_index_stat_tup_read',
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'TableName',
+                                    'Value': 'ride_entity'
+                                },
+                                {
+                                    'Name': 'IndexName',
+                                    'Value': idxname
+                                },
+                            ],
+                            'Unit': 'Count',
+                            'Value': idx_tup_read
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
+
+
         logger_debug.debug("starting  cloudwatch.put_metric_data.oldest_open_transaction")
         cloudwatch.put_metric_data(
             MetricData=[
@@ -2110,29 +2231,29 @@ def handler(event, context):
             ],
             Namespace='PG Counter Metrics'
         )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.Oldest_Replication_Slot_Lag_gb_behind_per_slot")
-        if result_count_replication_slots[0][0] > 0:
-            for k in json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot:
-                slot_name=k
-                oldest_replication_slot_lag_gb_behind=json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot[k]
-                cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                           'MetricName': "Oldest_Replication_Slot_Lag_gb_behind_"+slot_name ,
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                           ],
-                            'Unit': 'Gigabits',
-                            'Value': oldest_replication_slot_lag_gb_behind
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
-        else:
-            pass
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.Oldest_Replication_Slot_Lag_gb_behind_per_slot")
+        # if result_count_replication_slots[0][0] > 0:
+        #     for k in json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot:
+        #         slot_name=k
+        #         oldest_replication_slot_lag_gb_behind=json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot[k]
+        #         cloudwatch.put_metric_data(
+        #             MetricData=[
+        #                 {
+        #                    'MetricName': "Oldest_Replication_Slot_Lag_gb_behind_"+slot_name ,
+        #                     'Dimensions': [
+        #                         {
+        #                             'Name': 'DBInstanceIdentifier',
+        #                             'Value': rds_config.metric_name
+        #                         },
+        #                    ],
+        #                     'Unit': 'Gigabits',
+        #                     'Value': oldest_replication_slot_lag_gb_behind
+        #                 },
+        #             ],
+        #             Namespace='PG Counter Metrics'
+        #         )
+        # else:
+        #     pass
         if result_pg_stat_statements_extension[0][0] == 0:
             logger_debug.debug("---------> pg_stat_statements extension is not enabled")
             pass
@@ -2144,12 +2265,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_calls_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_calls",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': calls
@@ -2164,12 +2289,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_total_time_msec_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_total_time_msec",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Milliseconds',
                         'Value': total_time_msec
@@ -2184,12 +2313,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_min_time_msec_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_min_time_msec",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Milliseconds',
                         'Value': min_time_msec
@@ -2204,12 +2337,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_max_time_msec_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_max_time_msec",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Milliseconds',
                         'Value': max_time_msec
@@ -2224,12 +2361,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_avg_time_msec_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_avg_time_msec",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Milliseconds',
                         'Value': avg_time_msec
@@ -2244,12 +2385,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_stddev_time_msec_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_stddev_time_msec",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Milliseconds',
                         'Value': stddev_time_msec
@@ -2264,12 +2409,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_rows_per_exec_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_rows_per_exec",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': rows_per_exec
@@ -2284,12 +2433,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_rows_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_rows",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': rows
@@ -2304,12 +2457,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_db_time_percent_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_db_time_percent",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Percent',
                         'Value': db_time_percent
@@ -2324,12 +2481,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_shared_blks_hit_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_shared_blks_hit",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': shared_blks_hit
@@ -2344,12 +2505,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_shared_blks_read_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_shared_blks_read",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': shared_blks_read
@@ -2364,12 +2529,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_shared_blks_dirtied_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_shared_blks_dirtied",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': shared_blks_dirtied
@@ -2384,12 +2553,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_shared_blks_written_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_shared_blks_written",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': shared_blks_written
@@ -2404,12 +2577,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_local_blks_hit_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_local_blks_hit",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': local_blks_hit
@@ -2424,12 +2601,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_local_blks_read_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_local_blks_read",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': local_blks_read
@@ -2444,12 +2625,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_local_blks_dirtied_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_local_blks_dirtied",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': local_blks_dirtied
@@ -2464,12 +2649,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_local_blks_written_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_local_blks_written",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': local_blks_written
@@ -2484,12 +2673,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_temp_blks_read_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_temp_blks_read",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': temp_blks_read
@@ -2504,12 +2697,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_temp_blks_written_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_temp_blks_written",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Count',
                         'Value': temp_blks_written
@@ -2524,12 +2721,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_blk_read_time_msec_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_blk_read_time_msec",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Milliseconds',
                         'Value': blk_read_time_msec
@@ -2544,12 +2745,16 @@ def handler(event, context):
                 cloudwatch.put_metric_data(
                 MetricData=[
                     {
-                        'MetricName': "pg_stat_statements_blk_write_time_msec_queryid_"+str(queryid) ,
+                        'MetricName': "pg_stat_statements_blk_write_time_msec",
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
                                 'Value': rds_config.metric_name
                             },
+                            {
+                                'Name': 'QueryId',
+                                'Value': str(queryid)
+                            }
                         ],
                         'Unit': 'Milliseconds',
                         'Value': blk_write_time_msec
@@ -2557,108 +2762,108 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.db_load_cpu")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'db_load_cpu',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_db_load_cpu[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.db_load_none_cpu")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'db_load_none_cpu',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_db_load_none_cpu[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.bgwriter_buffers_clean")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'bgwriter_buffers_clean',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_bgwriter_buffers_clean[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.bgwriter_buffers_backend")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'bgwriter_buffers_backend',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_bgwriter_buffers_backend[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.bgwriter_maxwritten_clean")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'bgwriter_maxwritten_clean',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_bgwriter_maxwritten_clean[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.oldest_mxid")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'oldest_mxid',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_oldest_mxid[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.db_load_cpu")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'db_load_cpu',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_db_load_cpu[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.db_load_none_cpu")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'db_load_none_cpu',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_db_load_none_cpu[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.bgwriter_buffers_clean")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'bgwriter_buffers_clean',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_bgwriter_buffers_clean[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.bgwriter_buffers_backend")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'bgwriter_buffers_backend',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_bgwriter_buffers_backend[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.bgwriter_maxwritten_clean")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'bgwriter_maxwritten_clean',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_bgwriter_maxwritten_clean[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
+        # logger_debug.debug("starting  cloudwatch.put_metric_data.oldest_mxid")
+        # cloudwatch.put_metric_data(
+        #     MetricData=[
+        #         {
+        #             'MetricName': 'oldest_mxid',
+        #             'Dimensions': [
+        #                 {
+        #                     'Name': 'DBInstanceIdentifier',
+        #                     'Value': rds_config.metric_name
+        #                 },
+        #             ],
+        #             'Unit': 'Count',
+        #             'Value': result_oldest_mxid[0][0]
+        #         },
+        #     ],
+        #     Namespace='PG Counter Metrics'
+        # )
         logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_multixact_freeze_max_age")
         cloudwatch.put_metric_data(
             MetricData=[
