@@ -1060,7 +1060,7 @@ def handler(event, context):
         cloudwatch = boto3.client('cloudwatch')
         # Put Counter custom metrics
 
-        if (check_percent_towards_wraparound):
+        if check_percent_towards_wraparound:
             logger_debug.debug("starting  cloudwatch.put_metric_data.result_percent_towards_wraparound")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1078,25 +1078,27 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.queries_canceled_due_to_lock_timeout")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'queries_canceled_due_to_lock_timeouts',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_queries_canceled_due_to_lock_timeouts[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
 
-        if (check_queries_canceled_due_to_lock_deadlocks):
+        if check_queries_canceled_due_to_lock_timeouts:
+            logger_debug.debug("starting  cloudwatch.put_metric_data.queries_canceled_due_to_lock_timeout")
+            cloudwatch.put_metric_data(
+                MetricData=[
+                    {
+                        'MetricName': 'queries_canceled_due_to_lock_timeouts',
+                        'Dimensions': [
+                            {
+                                'Name': 'DBInstanceIdentifier',
+                                'Value': rds_config.metric_name
+                            },
+                        ],
+                        'Unit': 'Count',
+                        'Value': result_queries_canceled_due_to_lock_timeouts[0][0]
+                    },
+                ],
+                Namespace='PG Counter Metrics'
+            )
+
+        if check_queries_canceled_due_to_lock_deadlocks:
             logger_debug.debug("starting  cloudwatch.put_metric_data.queries_canceled_due_to_lock_deadlocks")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1115,7 +1117,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if (check_idle_in_transaction_sessions):
+        if check_idle_in_transaction_sessions:
             logger_debug.debug("starting  cloudwatch.put_metric_data.idle_in_transaction_sessions")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1133,7 +1135,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_idle_sessions):
+
+        if check_idle_sessions:
             logger_debug.debug("starting  cloudwatch.put_metric_data.idle_sessions")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1151,7 +1154,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_idle_in_transaction_aborted_sessions):
+
+        if check_idle_in_transaction_aborted_sessions:
             logger_debug.debug("starting  cloudwatch.put_metric_data.idle_in_transaction_aborted_sessions")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1170,7 +1174,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if (check_active_sessions):
+        if check_active_sessions:
             logger_debug.debug("starting  cloudwatch.put_metric_data.active_sessions")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1188,7 +1192,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_inactive_replication_slot):
+
+        if check_inactive_replication_slot:
             logger_debug.debug("starting  cloudwatch.put_metric_data.inactive_replication_slot")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1206,7 +1211,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_invalid_indexes):
+
+        if check_invalid_indexes:
             logger_debug.debug("starting  cloudwatch.put_metric_data.invalid_indexes")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1224,7 +1230,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_deadlocks):
+
+        if check_deadlocks:
             logger_debug.debug("starting  cloudwatch.put_metric_data.deadlocks")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1242,7 +1249,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_total_connections):
+
+        if check_total_connections:
             logger_debug.debug("starting  cloudwatch.put_metric_data.total_connections")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1260,7 +1268,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_max_connections):
+
+        if check_max_connections:
             logger_debug.debug("starting  cloudwatch.put_metric_data.max_connections")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1278,7 +1287,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_connections_utilization):
+
+        if check_connections_utilization:
             logger_debug.debug("starting  cloudwatch.put_metric_data.connections_utilization")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1296,7 +1306,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_autovacuum_freeze_max_age):
+
+        if check_autovacuum_freeze_max_age:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_freeze_max_age")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1314,7 +1325,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_oldest_xid):
+
+        if check_oldest_xid:
             logger_debug.debug("starting  cloudwatch.put_metric_data.oldest_xid")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1332,7 +1344,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_percent_towards_emergency_autovacuum):
+
+        if check_percent_towards_emergency_autovacuum:
             logger_debug.debug("starting  cloudwatch.put_metric_data.percent_towards_emergency_autovacuum")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1350,7 +1363,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_autovacuum_count_per_min):
+
+        if check_autovacuum_count_per_min:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_count_per_min")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1368,7 +1382,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_autovacuum_count_per_hour):
+
+        if check_autovacuum_count_per_hour:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_count_per_hour")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1386,7 +1401,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_autovacuum_count_per_day):
+
+        if check_autovacuum_count_per_day:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_count_per_day")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1404,7 +1420,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_autoanalyze_count_per_min):
+
+        if check_autoanalyze_count_per_min:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autoanalyze_count_per_min")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1422,7 +1439,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_autoanalyze_count_per_hour):
+
+        if check_autoanalyze_count_per_hour:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autoanalyze_count_per_hour")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1440,7 +1458,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_autoanalyze_count_per_day):
+
+        if check_autoanalyze_count_per_day:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autoanalyze_count_per_day")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1458,7 +1477,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_total_db_size_in_gb):
+
+        if check_total_db_size_in_gb:
             logger_debug.debug("starting  cloudwatch.put_metric_data.total_DB_size_in_GB")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1476,7 +1496,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_active_replication_slot):
+
+        if check_active_replication_slot:
             logger_debug.debug("starting  cloudwatch.put_metric_data.Active_replication_slot")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1494,7 +1515,8 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if (check_blocked_sessions):
+
+        if check_blocked_sessions:
             logger_debug.debug("starting  cloudwatch.put_metric_data.blocked_sessions")
             cloudwatch.put_metric_data(
                 MetricData=[
