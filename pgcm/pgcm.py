@@ -17,6 +17,7 @@ import boto3
 import rds_config
 import json
 import tables_config
+import flag_config
 import ssl
 import os
 
@@ -282,7 +283,7 @@ and tblname in """ + tables_list + """
 ORDER BY bloat_Size desc, nspname, tblname, idxname; """
 
 query_ride_entity_index_stat = """select indexrelname, idx_tup_fetch, idx_tup_read
-from pg_stat_user_indexes where (relname='ride_entity_p_2024t1_sg' OR relname='ride_entity_p_2024t1_other') order by idx_tup_read"""
+    from pg_stat_user_indexes where (relname='ride_entity_p_2024t1_sg' OR relname='ride_entity_p_2024t1_other') order by idx_tup_read"""
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -334,20 +335,20 @@ def handler(event, context):
 
         check_percent_towards_wraparound = False
 
-        if (check_percent_towards_wraparound):
+        if flag_config.check_percent_towards_wraparound:
             logger_debug.debug("Executing result_percent_towards_wraparound")
             result_percent_towards_wraparound = executeSQL(conn, query_percent_towards_wraparound)
             logger_debug.debug("result_percent_towards_wraparound = " + str(result_percent_towards_wraparound[0][0]))
 
         check_queries_canceled_due_to_lock_timeouts = False
-        if (check_queries_canceled_due_to_lock_timeouts):
+        if flag_config.check_queries_canceled_due_to_lock_timeouts:
             logger_debug.debug("Executing result_queries_canceled_due_to_lock_timeouts")
             result_queries_canceled_due_to_lock_timeouts = executeSQL(conn, query_queries_canceled_due_to_lock_timeouts)
             logger_debug.debug("result_queries_canceled_due_to_lock_timeouts = " + str(
                 result_queries_canceled_due_to_lock_timeouts[0][0]))
 
         check_queries_canceled_due_to_lock_deadlocks = False
-        if (check_queries_canceled_due_to_lock_deadlocks):
+        if flag_config.check_queries_canceled_due_to_lock_deadlocks:
             logger_debug.debug("Executing result_queries_canceled_due_to_lock_deadlocks")
             result_queries_canceled_due_to_lock_deadlocks = executeSQL(conn,
                                                                        query_queries_canceled_due_to_lock_deadlocks)
@@ -355,82 +356,82 @@ def handler(event, context):
                 result_queries_canceled_due_to_lock_deadlocks[0][0]))
 
         check_idle_in_transaction_sessions = False
-        if (check_idle_in_transaction_sessions):
+        if flag_config.check_idle_in_transaction_sessions:
             logger_debug.debug("Executing result_idle_in_transaction_sessions")
             result_idle_in_transaction_sessions = executeSQL(conn, query_idle_in_transaction_sessions)
             logger_debug.debug(
                 "result_idle_in_transaction_sessions = " + str(result_idle_in_transaction_sessions[0][0]))
 
         check_idle_sessions = False
-        if (check_idle_sessions):
+        if flag_config.check_idle_sessions:
             logger_debug.debug("Executing result_idle_sessions")
             result_idle_sessions = executeSQL(conn, query_idle_sessions)
             logger_debug.debug("result_idle_sessions = " + str(result_idle_sessions[0][0]))
 
         check_idle_in_transaction_aborted_sessions = False
-        if (check_idle_in_transaction_aborted_sessions):
+        if flag_config.check_idle_in_transaction_aborted_sessions:
             logger_debug.debug("Executing result_idle_in_transaction_aborted_sessions")
             result_idle_in_transaction_aborted_sessions = executeSQL(conn, query_idle_in_transaction_aborted_sessions)
             logger_debug.debug("result_idle_in_transaction_aborted_sessions = " + str(
                 result_idle_in_transaction_aborted_sessions[0][0]))
 
         check_active_sessions = False
-        if (check_active_sessions):
+        if flag_config.check_active_sessions:
             logger_debug.debug("Executing result_active_sessions")
             result_active_sessions = executeSQL(conn, query_active_sessions)
             logger_debug.debug("result_active_sessions = " + str(result_active_sessions[0][0]))
 
         check_inactive_replication_slot = False
-        if (check_inactive_replication_slot):
+        if flag_config.check_inactive_replication_slot:
             logger_debug.debug("Executing result_Inactive_replication_slot")
             result_inactive_replication_slot = executeSQL(conn, query_Inactive_replication_slots)
             logger_debug.debug("result_Inactive_replication_slot = " + str(result_inactive_replication_slot[0][0]))
 
         check_invalid_indexes = False
-        if (check_invalid_indexes):
+        if flag_config.check_invalid_indexes:
             logger_debug.debug("Executing result_invalid_indexes")
             result_invalid_indexes = executeSQL(conn, query_invalid_indexes)
             logger_debug.debug("result_invalid_indexes = " + str(result_invalid_indexes[0][0]))
 
         check_deadlocks = False
-        if (check_deadlocks):
+        if flag_config.check_deadlocks:
             logger_debug.debug("Executing result_deadlocks")
             result_deadlocks = executeSQL(conn, query_deadlocks)
             logger_debug.debug("result_deadlocks = " + str(result_deadlocks[0][0]))
 
         check_total_connections = False
-        if (check_total_connections):
+        if flag_config.check_total_connections:
             logger_debug.debug("Executing result_total_connections")
             result_total_connections = executeSQL(conn, query_total_connections)
             logger_debug.debug("result_total_connections = " + str(result_total_connections[0][0]))
 
         check_max_connections = False
-        if (check_max_connections):
+        if flag_config.check_max_connections:
             logger_debug.debug("Executing result_max_connections")
             result_max_connections = executeSQL(conn, query_max_connections)
             logger_debug.debug("result_max_connections = " + str(result_max_connections[0][0]))
 
         check_connections_utilization = False
-        if check_connections_utilization:
+        if flag_config.check_connections_utilization:
             logger_debug.debug("Executing result_connections_utilization")
             result_connections_utilization = round(
                 100 * (result_total_connections[0][0] / result_max_connections[0][0]), 2)
             logger_debug.debug("result_connections_utilization = " + str(result_connections_utilization))
 
         check_autovacuum_freeze_max_age = False
-        if check_autovacuum_freeze_max_age:
+        if flag_config.check_autovacuum_freeze_max_age:
             logger_debug.debug("Executing result_autovacuum_freeze_max_age")
             result_autovacuum_freeze_max_age = executeSQL(conn, query_autovacuum_freeze_max_age)
             logger_debug.debug("result_autovacuum_freeze_max_age = " + str(result_autovacuum_freeze_max_age[0][0]))
 
         check_oldest_xid = False
-        if (check_oldest_xid):
+        if flag_config.check_oldest_xid:
             logger_debug.debug("Executing result_oldest_xid")
             result_oldest_xid = executeSQL(conn, query_oldest_xid)
             logger_debug.debug("result_oldest_xid = " + str(result_oldest_xid[0][0]))
 
         check_percent_towards_emergency_autovacuum = False and check_autovacuum_freeze_max_age and check_oldest_xid
-        if check_percent_towards_emergency_autovacuum:
+        if flag_config.check_percent_towards_emergency_autovacuum:
             logger_debug.debug("Executing result_percent_towards_emergency_autovacuum")
             result_percent_towards_emergency_autovacuum = round(
                 100 * (result_oldest_xid[0][0] / result_autovacuum_freeze_max_age[0][0]), 2)
@@ -438,61 +439,61 @@ def handler(event, context):
                 "result_percent_towards_emergency_autovacuum = " + str(result_percent_towards_emergency_autovacuum))
 
         check_autovacuum_count_per_min = False
-        if check_autovacuum_count_per_min:
+        if flag_config.check_autovacuum_count_per_min:
             logger_debug.debug("Executing result_autovacuum_count_per_min")
             result_autovacuum_count_per_min = executeSQL(conn, query_autovacuum_count_per_min)
             logger_debug.debug("result_autovacuum_count_per_min = " + str(result_autovacuum_count_per_min[0][0]))
 
         check_autovacuum_count_per_hour = False
-        if check_autovacuum_count_per_hour:
+        if flag_config.check_autovacuum_count_per_hour:
             logger_debug.debug("Executing result_autovacuum_count_per_hour")
             result_autovacuum_count_per_hour = executeSQL(conn, query_autovacuum_count_per_hour)
             logger_debug.debug("result_autovacuum_count_per_hour = " + str(result_autovacuum_count_per_hour[0][0]))
 
         check_autovacuum_count_per_day = False
-        if check_autovacuum_count_per_day:
+        if flag_config.check_autovacuum_count_per_day:
             logger_debug.debug("Executing result_autovacuum_count_per_day")
             result_autovacuum_count_per_day = executeSQL(conn, query_autovacuum_count_per_day)
             logger_debug.debug("result_autovacuum_count_per_day = " + str(result_autovacuum_count_per_day[0][0]))
 
         check_autoanalyze_count_per_min = False
-        if check_autoanalyze_count_per_min:
+        if flag_config.check_autoanalyze_count_per_min:
             logger_debug.debug("Executing result_autoanalyze_count_per_min")
             result_autoanalyze_count_per_min = executeSQL(conn, query_autoanalyze_count_per_min)
             logger_debug.debug("result_autoanalyze_count_per_min = " + str(result_autoanalyze_count_per_min[0][0]))
 
         check_autoanalyze_count_per_hour = False
-        if (check_autoanalyze_count_per_hour):
+        if flag_config.check_autoanalyze_count_per_hour:
             logger_debug.debug("Executing result_autoanalyze_count_per_hour")
             result_autoanalyze_count_per_hour = executeSQL(conn, query_autoanalyze_count_per_hour)
             logger_debug.debug("result_autoanalyze_count_per_hour = " + str(result_autoanalyze_count_per_hour[0][0]))
 
         check_autoanalyze_count_per_day = False
-        if check_autoanalyze_count_per_day:
+        if flag_config.check_autoanalyze_count_per_day:
             logger_debug.debug("Executing result_autoanalyze_count_per_day")
             result_autoanalyze_count_per_day = executeSQL(conn, query_autoanalyze_count_per_day)
             logger_debug.debug("result_autoanalyze_count_per_day = " + str(result_autoanalyze_count_per_day[0][0]))
 
         check_total_db_size_in_gb = False
-        if check_total_db_size_in_gb:
+        if flag_config.check_total_db_size_in_gb:
             logger_debug.debug("Executing result_total_DB_size_in_GB")
             result_total_db_size_in_gb = executeSQL(conn, query_total_DB_size_in_GB)
             logger_debug.debug("result_total_DB_size_in_GB = " + str(result_total_db_size_in_gb[0][0]))
 
         check_active_replication_slot = False
-        if check_active_replication_slot:
+        if flag_config.check_active_replication_slot:
             logger_debug.debug("Executing result_Active_replication_slot")
             result_active_replication_slot = executeSQL(conn, query_Active_replication_slots)
             logger_debug.debug("result_Active_replication_slot = " + str(result_active_replication_slot[0][0]))
 
         check_blocked_sessions = False
-        if check_blocked_sessions:
+        if flag_config.check_blocked_sessions:
             logger_debug.debug("Executing result_blocked_sessions")
             result_blocked_sessions = executeSQL(conn, query_blocked_sessions)
             logger_debug.debug("result_blocked_sessions = " + str(result_blocked_sessions[0][0]))
 
         check_wait_event = True
-        if check_wait_event:
+        if flag_config.check_wait_event:
             logger_debug.debug("Executing result_wait_event")
             result_wait_event = executeSQL(conn, query_wait_event)
             json_result_wait_event = {}
@@ -511,7 +512,7 @@ def handler(event, context):
             result_table_stat = executeSQL(conn, query_table_stat)
 
             check_table_stat_autovacuum_count = False
-            if (check_table_stat_autovacuum_count):
+            if flag_config.check_table_stat_autovacuum_count:
                 json_result_table_stat_autovacuum_count = {}
                 logger_debug.debug("starting result_table_stat_autovacuum_count")
                 for k in result_table_stat[0]:
@@ -524,7 +525,7 @@ def handler(event, context):
                     "result_table_stat_autovacuum_count= " + str(json_result_table_stat_autovacuum_count))
 
             check_table_stat_autoanalyze_count = False
-            if (check_table_stat_autoanalyze_count):
+            if flag_config.check_table_stat_autoanalyze_count:
                 logger_debug.debug("starting result_table_stat_autoanalyze_count")
                 json_result_table_stat_autoanalyze_count = {}
                 for k in result_table_stat[0]:
@@ -537,7 +538,7 @@ def handler(event, context):
                     "result_table_stat_autoanalyze_count= " + str(json_result_table_stat_autoanalyze_count))
 
             check_table_stat_n_dead_tup = True
-            if (check_table_stat_n_dead_tup):
+            if flag_config.check_table_stat_n_dead_tup:
                 json_result_table_stat_n_dead_tup = {}
                 logger_debug.debug("starting result_table_stat_n_dead_tup")
                 for k in result_table_stat[0]:
@@ -549,7 +550,7 @@ def handler(event, context):
                 logger_debug.debug("result_table_stat_n_dead_tup= " + str(json_result_table_stat_n_dead_tup))
 
             check_table_stat_n_live_tup = True
-            if (check_table_stat_n_live_tup):
+            if flag_config.check_table_stat_n_live_tup:
                 logger_debug.debug("starting result_table_stat_n_live_tup")
                 json_result_table_stat_n_live_tup = {}
                 for k in result_table_stat[0]:
@@ -561,7 +562,7 @@ def handler(event, context):
                 logger_debug.debug("result_table_stat_n_live_tup= " + str(json_result_table_stat_n_live_tup))
 
             check_table_stat_dead_tup_percent = True
-            if check_table_stat_dead_tup_percent:
+            if flag_config.check_table_stat_dead_tup_percent:
                 logger_debug.debug("starting result_table_stat_dead_tup_percent")
                 json_result_table_stat_dead_tup_percent = {}
                 for k in result_table_stat[0]:
@@ -574,7 +575,7 @@ def handler(event, context):
                         "result_table_stat_dead_tup_percent= " + str(json_result_table_stat_dead_tup_percent))
 
             check_table_stat_total_fts_scan = True
-            if (check_table_stat_total_fts_scan):
+            if flag_config.check_table_stat_total_fts_scan:
                 logger_debug.debug("starting result_table_stat_total_fts_scan")
                 json_result_table_stat_total_fts_scan = {}
                 for k in result_table_stat[0]:
@@ -586,7 +587,7 @@ def handler(event, context):
                 logger_debug.debug("result_table_stat_total_fts_scan= " + str(json_result_table_stat_total_fts_scan))
 
             check_table_stat_total_idx_scan = True
-            if (check_table_stat_total_idx_scan):
+            if flag_config.check_table_stat_total_idx_scan:
                 logger_debug.debug("starting result_table_stat_total_idx_scan")
                 json_result_table_stat_total_idx_scan = {}
                 for k in result_table_stat[0]:
@@ -598,7 +599,7 @@ def handler(event, context):
                 logger_debug.debug("result_table_stat_total_idx_scan= " + str(json_result_table_stat_total_idx_scan))
 
             check_table_stat_idx_tup_fetch = True
-            if (check_table_stat_idx_tup_fetch):
+            if flag_config.check_table_stat_idx_tup_fetch:
                 logger_debug.debug("starting result_table_stat_n_tup_ins")
 
                 json_result_table_stat_idx_tup_fetch = {}
@@ -607,14 +608,14 @@ def handler(event, context):
                         json_result_table_stat_idx_tup_fetch[d["Table_Name"]] = d["idx_tup_fetch"]
 
             check_table_stat_seq_tup_read = True
-            if (check_table_stat_seq_tup_read):
+            if flag_config.check_table_stat_seq_tup_read:
                 json_result_table_stat_seq_tup_read = {}
                 for k in result_table_stat[0]:
                     for d in k['array_to_json']:
                         json_result_table_stat_seq_tup_read[d["Table_Name"]] = d["seq_tup_read"]
 
             check_table_stat_n_tup_ins = True
-            if (check_table_stat_n_tup_ins):
+            if flag_config.check_table_stat_n_tup_ins:
                 json_result_table_stat_n_tup_ins = {}
                 for k in result_table_stat[0]:
                     # logger.info(k)
@@ -625,7 +626,7 @@ def handler(event, context):
                 logger_debug.debug("result_table_stat_n_tup_ins= " + str(json_result_table_stat_n_tup_ins))
 
             check_table_stat_n_tup_upd = True
-            if (check_table_stat_n_tup_upd):
+            if flag_config.check_table_stat_n_tup_upd:
                 logger_debug.debug("starting result_table_stat_n_tup_upd")
                 json_result_table_stat_n_tup_upd = {}
                 for k in result_table_stat[0]:
@@ -637,7 +638,7 @@ def handler(event, context):
                 logger_debug.debug("result_table_stat_n_tup_upd= " + str(json_result_table_stat_n_tup_upd))
 
             check_table_stat_n_tup_del = False
-            if (check_table_stat_n_tup_del):
+            if flag_config.check_table_stat_n_tup_del:
                 logger_debug.debug("starting result_table_stat_n_tup_del")
                 json_result_table_stat_n_tup_del = {}
                 for k in result_table_stat[0]:
@@ -649,7 +650,7 @@ def handler(event, context):
                 logger_debug.debug("result_table_stat_n_tup_del= " + str(json_result_table_stat_n_tup_del))
 
             check_result_table_stat_n_mod_since_analyze = False
-            if (check_result_table_stat_n_mod_since_analyze):
+            if flag_config.check_result_table_stat_n_mod_since_analyze:
                 logger_debug.debug("starting result_table_stat_n_mod_since_analyze")
                 json_result_table_stat_n_mod_since_analyze = {}
                 for k in result_table_stat[0]:
@@ -662,7 +663,7 @@ def handler(event, context):
                     "result_table_stat_n_mod_since_analyze= " + str(json_result_table_stat_n_mod_since_analyze))
 
             check_table_stat_n_tup_hot_upd = False
-            if (check_table_stat_n_tup_hot_upd):
+            if flag_config.check_table_stat_n_tup_hot_upd:
                 logger_debug.debug("starting result_table_stat_n_tup_hot_upd")
                 json_result_table_stat_n_tup_hot_upd = {}
                 for k in result_table_stat[0]:
@@ -674,7 +675,7 @@ def handler(event, context):
                 logger_debug.debug("result_table_stat_n_tup_hot_upd= " + str(json_result_table_stat_n_tup_hot_upd))
 
             check_table_stat_tup_ins_pct = False
-            if (check_table_stat_tup_ins_pct):
+            if flag_config.check_table_stat_tup_ins_pct:
                 logger_debug.debug("starting result_table_stat_tup_ins_pct")
                 json_result_table_stat_tup_ins_pct = {}
                 for k in result_table_stat[0]:
@@ -686,7 +687,7 @@ def handler(event, context):
                 logger_debug.debug("result_table_stat_tup_ins_pct= " + str(json_result_table_stat_tup_ins_pct))
 
             check_stat_tup_upd_pct = False
-            if (check_stat_tup_upd_pct):
+            if flag_config.check_stat_tup_upd_pct:
                 logger_debug.debug("starting result_table_stat_tup_upd_pct")
                 json_result_table_stat_tup_upd_pct = {}
                 for k in result_table_stat[0]:
@@ -698,7 +699,7 @@ def handler(event, context):
                 logger_debug.debug("result_table_stat_tup_upd_pct= " + str(json_result_table_stat_tup_upd_pct))
 
             check_stat_tup_del_pct = False
-            if (check_stat_tup_del_pct):
+            if flag_config.check_stat_tup_del_pct:
                 logger_debug.debug("starting result_table_stat_tup_del_pct")
                 json_result_table_stat_tup_del_pct = {}
                 for k in result_table_stat[0]:
@@ -710,26 +711,26 @@ def handler(event, context):
                 logger_debug.debug("result_table_stat_tup_del_pct= " + str(json_result_table_stat_tup_del_pct))
 
         check_oldest_open_transaction = False
-        if check_oldest_open_transaction:
+        if flag_config.check_oldest_open_transaction:
             logger_debug.debug("Executing result_oldest_open_transaction")
             result_oldest_open_transaction = executeSQL(conn, query_oldest_open_transaction)
             logger_debug.debug("result_oldest_open_transaction = " + str(result_oldest_open_transaction[0][0]))
 
         check_n_tables_eligible_for_autovacuum = False
-        if check_n_tables_eligible_for_autovacuum:
+        if flag_config.check_n_tables_eligible_for_autovacuum:
             logger_debug.debug("Executing result_n_tables_eligible_for_autovacuum")
             result_n_tables_eligible_for_autovacuum = executeSQL(conn, query_n_tables_eligible_for_autovacuum)
             logger_debug.debug(
                 "result_n_tables_eligible_for_autovacuum = " + str(result_n_tables_eligible_for_autovacuum[0][0]))
 
         check_not_granted_lock = False
-        if check_not_granted_lock:
+        if flag_config.check_not_granted_lock:
             logger_debug.debug("Executing result_not_granted_lock")
             result_not_granted_lock = executeSQL(conn, query_not_granted_lock)
             logger_debug.debug("result_not_granted_lock = " + str(result_not_granted_lock[0][0]))
 
         check_lock_mode = False
-        if check_lock_mode:
+        if flag_config.check_lock_mode:
             logger_debug.debug("Executing result_lock_mode")
             result_lock_mode = executeSQL(conn, query_lock_mode)
             json_result_lock_mode = {}
@@ -742,7 +743,7 @@ def handler(event, context):
             logger_debug.debug("result_lock_mode= " + str(json_result_lock_mode))
 
         check_lock_type = False
-        if check_lock_type:
+        if flag_config.check_lock_type:
             logger_debug.debug("Executing result_lock_type")
             result_lock_type = executeSQL(conn, query_lock_type)
             json_result_lock_type = {}
@@ -755,87 +756,87 @@ def handler(event, context):
             logger_debug.debug("result_lock_type= " + str(json_result_lock_type))
 
         check_xact_commit = False
-        if check_xact_commit:
+        if flag_config.check_xact_commit:
             logger_debug.debug("Executing result_xact_commit")
             result_xact_commit = executeSQL(conn, query_xact_commit)
             logger_debug.debug("result_xact_commit = " + str(result_xact_commit[0][0]))
 
         check_xact_rollback = False
-        if check_xact_rollback:
+        if flag_config.check_xact_rollback:
             logger_debug.debug("Executing result_xact_rollback")
             result_xact_rollback = executeSQL(conn, query_xact_rollback)
             logger_debug.debug("result_xact_rollback = " + str(result_xact_rollback[0][0]))
 
         check_xact_commit_ratio = False
-        if check_xact_commit_ratio:
+        if flag_config.check_xact_commit_ratio:
             logger_debug.debug("Executing result_xact_commit_ratio")
             result_xact_commit_ratio = executeSQL(conn, query_xact_commit_ratio)
             logger_debug.debug("result_xact_commit_ratio= " + str(result_xact_commit_ratio[0][0]))
 
         check_tup_returned = True
-        if check_tup_returned:
+        if flag_config.check_tup_returned:
             logger_debug.debug("Executing result_tup_returned")
             result_tup_returned = executeSQL(conn, query_tup_returned)
             logger_debug.debug("result_tup_returned = " + str(result_tup_returned[0][0]))
 
         check_tup_fetched = True
-        if check_tup_fetched:
+        if flag_config.check_tup_fetched:
             logger_debug.debug("Executing result_tup_fetched")
             result_tup_fetched = executeSQL(conn, query_tup_fetched)
             logger_debug.debug("result_tup_fetched = " + str(result_tup_fetched[0][0]))
 
         check_tup_updated = False
-        if check_tup_updated:
+        if flag_config.check_tup_updated:
             logger_debug.debug("Executing result_tup_updated")
             result_tup_updated = executeSQL(conn, query_tup_updated)
             logger_debug.debug("result_tup_updated = " + str(result_tup_updated[0][0]))
 
         check_tup_deleted = False
-        if check_tup_deleted:
+        if flag_config.check_tup_deleted:
             logger_debug.debug("Executing result_tup_deleted")
             result_tup_deleted = executeSQL(conn, query_tup_deleted)
             logger_debug.debug("result_tup_deleted = " + str(result_tup_deleted[0][0]))
 
         check_tup_inserted = True
-        if check_tup_inserted:
+        if flag_config.check_tup_inserted:
             logger_debug.debug("Executing result_tup_inserted")
             result_tup_inserted = executeSQL(conn, query_tup_inserted)
             logger_debug.debug("result_tup_inserted = " + str(result_tup_inserted[0][0]))
 
         check_checkpoints_requested = False
-        if check_checkpoints_requested:
+        if flag_config.check_checkpoints_requested:
             logger_debug.debug("Executing result_checkpoints_requested")
             result_checkpoints_requested = executeSQL(conn, query_checkpoints_requested)
             logger_debug.debug("result_checkpoints_requested = " + str(result_checkpoints_requested[0][0]))
 
         check_checkpoints_timed = False
-        if check_checkpoints_timed:
+        if flag_config.check_checkpoints_timed:
             logger_debug.debug("Executing result_checkpoints_timed")
             result_checkpoints_timed = executeSQL(conn, query_checkpoints_timed)
             logger_debug.debug("result_checkpoints_timed = " + str(result_checkpoints_timed[0][0]))
 
         check_oldest_replication_slot_lag_gb_behind = False
-        if check_oldest_replication_slot_lag_gb_behind:
+        if flag_config.check_oldest_replication_slot_lag_gb_behind:
             logger_debug.debug("Executing result_oldest_replication_slot_lag_gb_behind")
             result_oldest_replication_slot_lag_gb_behind = executeSQL(conn, query_Oldest_Replication_Slot_Lag_gb_behind)
             logger_debug.debug("result_oldest_replication_slot_lag_gb_behind = " + str(
                 result_oldest_replication_slot_lag_gb_behind[0][0]))
 
         check_oldest_open_idl_in_transaction = False
-        if check_oldest_open_idl_in_transaction:
+        if flag_config.check_oldest_open_idl_in_transaction:
             logger_debug.debug("Executing result_oldest_open_idl_in_transaction")
             result_oldest_open_idl_in_transaction = executeSQL(conn, query_oldest_open_idl_in_transaction)
             logger_debug.debug(
                 "result_oldest_open_idl_in_transaction = " + str(result_oldest_open_idl_in_transaction[0][0]))
 
         check_count_replication_slots = False
-        if check_count_replication_slots:
+        if flag_config.check_count_replication_slots:
             logger_debug.debug("Executing result_count_replication_slots")
             result_count_replication_slots = executeSQL(conn, query_count_replication_slots)
             logger_debug.debug("result_count_replication_slots = " + str(result_count_replication_slots[0][0]))
 
         check_oldest_replication_slot_lag_gb_behind_per_slot = False
-        if check_oldest_replication_slot_lag_gb_behind_per_slot:
+        if flag_config.check_oldest_replication_slot_lag_gb_behind_per_slot:
             logger_debug.debug("Executing result_Oldest_Replication_Slot_Lag_gb_behind_per_slot")
             result_oldest_replication_slot_lag_gb_behind_per_slot = executeSQL(
                 conn,
@@ -1041,14 +1042,16 @@ def handler(event, context):
         # logger_debug.debug("result_oldest_mxid = " + str(result_oldest_mxid[0][0]))
 
         check_autovacuum_multixact_freeze_max_age = False
-        if check_autovacuum_multixact_freeze_max_age:
+        if flag_config.check_autovacuum_multixact_freeze_max_age:
             logger_debug.debug("Executing result_autovacuum_multixact_freeze_max_age")
             result_autovacuum_multixact_freeze_max_age = executeSQL(conn, query_autovacuum_multixact_freeze_max_age)
             logger_debug.debug(
                 "result_autovacuum_multixact_freeze_max_age = " + str(result_autovacuum_multixact_freeze_max_age[0][0]))
 
         result_index_stat = executeSQL(conn, query_index_stat)
-        result_ride_entity_index_stat = executeSQL(conn, query_ride_entity_index_stat)
+        check_ride_entity_index_stat = db_name == "tada_ride_service"
+        if flag_config.check_ride_entity_index_stat:
+            result_ride_entity_index_stat = executeSQL(conn, query_ride_entity_index_stat)
 
         logger.info("------------------------------")
         logger.info("the queries execution finished")
@@ -1060,7 +1063,7 @@ def handler(event, context):
         cloudwatch = boto3.client('cloudwatch')
         # Put Counter custom metrics
 
-        if check_percent_towards_wraparound:
+        if flag_config.check_percent_towards_wraparound:
             logger_debug.debug("starting  cloudwatch.put_metric_data.result_percent_towards_wraparound")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1079,7 +1082,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_queries_canceled_due_to_lock_timeouts:
+        if flag_config.check_queries_canceled_due_to_lock_timeouts:
             logger_debug.debug("starting  cloudwatch.put_metric_data.queries_canceled_due_to_lock_timeout")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1098,7 +1101,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_queries_canceled_due_to_lock_deadlocks:
+        if flag_config.check_queries_canceled_due_to_lock_deadlocks:
             logger_debug.debug("starting  cloudwatch.put_metric_data.queries_canceled_due_to_lock_deadlocks")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1117,7 +1120,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_idle_in_transaction_sessions:
+        if flag_config.check_idle_in_transaction_sessions:
             logger_debug.debug("starting  cloudwatch.put_metric_data.idle_in_transaction_sessions")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1136,7 +1139,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_idle_sessions:
+        if flag_config.check_idle_sessions:
             logger_debug.debug("starting  cloudwatch.put_metric_data.idle_sessions")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1155,7 +1158,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_idle_in_transaction_aborted_sessions:
+        if flag_config.check_idle_in_transaction_aborted_sessions:
             logger_debug.debug("starting  cloudwatch.put_metric_data.idle_in_transaction_aborted_sessions")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1174,7 +1177,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_active_sessions:
+        if flag_config.check_active_sessions:
             logger_debug.debug("starting  cloudwatch.put_metric_data.active_sessions")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1193,7 +1196,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_inactive_replication_slot:
+        if flag_config.check_inactive_replication_slot:
             logger_debug.debug("starting  cloudwatch.put_metric_data.inactive_replication_slot")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1212,7 +1215,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_invalid_indexes:
+        if flag_config.check_invalid_indexes:
             logger_debug.debug("starting  cloudwatch.put_metric_data.invalid_indexes")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1231,7 +1234,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_deadlocks:
+        if flag_config.check_deadlocks:
             logger_debug.debug("starting  cloudwatch.put_metric_data.deadlocks")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1250,7 +1253,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_total_connections:
+        if flag_config.check_total_connections:
             logger_debug.debug("starting  cloudwatch.put_metric_data.total_connections")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1269,7 +1272,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_max_connections:
+        if flag_config.check_max_connections:
             logger_debug.debug("starting  cloudwatch.put_metric_data.max_connections")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1288,7 +1291,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_connections_utilization:
+        if flag_config.check_connections_utilization:
             logger_debug.debug("starting  cloudwatch.put_metric_data.connections_utilization")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1307,7 +1310,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_autovacuum_freeze_max_age:
+        if flag_config.check_autovacuum_freeze_max_age:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_freeze_max_age")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1326,7 +1329,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_oldest_xid:
+        if flag_config.check_oldest_xid:
             logger_debug.debug("starting  cloudwatch.put_metric_data.oldest_xid")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1345,7 +1348,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_percent_towards_emergency_autovacuum:
+        if flag_config.check_percent_towards_emergency_autovacuum:
             logger_debug.debug("starting  cloudwatch.put_metric_data.percent_towards_emergency_autovacuum")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1364,7 +1367,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_autovacuum_count_per_min:
+        if flag_config.check_autovacuum_count_per_min:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_count_per_min")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1383,7 +1386,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_autovacuum_count_per_hour:
+        if flag_config.check_autovacuum_count_per_hour:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_count_per_hour")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1402,7 +1405,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_autovacuum_count_per_day:
+        if flag_config.check_autovacuum_count_per_day:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_count_per_day")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1421,7 +1424,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_autoanalyze_count_per_min:
+        if flag_config.check_autoanalyze_count_per_min:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autoanalyze_count_per_min")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1440,7 +1443,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_autoanalyze_count_per_hour:
+        if flag_config.check_autoanalyze_count_per_hour:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autoanalyze_count_per_hour")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1459,7 +1462,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_autoanalyze_count_per_day:
+        if flag_config.check_autoanalyze_count_per_day:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autoanalyze_count_per_day")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1478,7 +1481,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_total_db_size_in_gb:
+        if flag_config.check_total_db_size_in_gb:
             logger_debug.debug("starting  cloudwatch.put_metric_data.total_DB_size_in_GB")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1497,7 +1500,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_active_replication_slot:
+        if flag_config.check_active_replication_slot:
             logger_debug.debug("starting  cloudwatch.put_metric_data.Active_replication_slot")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1516,7 +1519,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_blocked_sessions:
+        if flag_config.check_blocked_sessions:
             logger_debug.debug("starting  cloudwatch.put_metric_data.blocked_sessions")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -1535,7 +1538,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_wait_event:
+        if flag_config.check_wait_event:
             logger_debug.debug("starting  cloudwatch.put_metric_data.wait_event")
             for k in json_result_wait_event:
                 wait_event = k
@@ -1561,7 +1564,7 @@ def handler(event, context):
         if len(schema_list) == 0:
             pass
         else:
-            if check_table_stat_autovacuum_count:
+            if flag_config.check_table_stat_autovacuum_count:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_autovacuum_count")
                 for k in json_result_table_stat_autovacuum_count:
                     Table_Name = k
@@ -1587,7 +1590,7 @@ def handler(event, context):
                         ],
                         Namespace='PG Counter Metrics'
                     )
-            if check_table_stat_autoanalyze_count:
+            if flag_config.check_table_stat_autoanalyze_count:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_autoanalyze_count")
                 for k in json_result_table_stat_autoanalyze_count:
                     Table_Name = k
@@ -1613,7 +1616,7 @@ def handler(event, context):
                         ],
                         Namespace='PG Counter Metrics'
                     )
-            if check_table_stat_n_dead_tup:
+            if flag_config.check_table_stat_n_dead_tup:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_dead_tup")
                 for k in json_result_table_stat_n_dead_tup:
                     Table_Name = k
@@ -1640,7 +1643,7 @@ def handler(event, context):
                         Namespace='PG Counter Metrics'
                     )
 
-            if check_table_stat_n_live_tup:
+            if flag_config.check_table_stat_n_live_tup:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_live_tup")
                 for k in json_result_table_stat_n_live_tup:
                     Table_Name = k
@@ -1667,7 +1670,7 @@ def handler(event, context):
                         Namespace='PG Counter Metrics'
                     )
 
-            if check_table_stat_dead_tup_percent:
+            if flag_config.check_table_stat_dead_tup_percent:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_dead_tup_percent")
                 for k in json_result_table_stat_dead_tup_percent:
                     Table_Name = k
@@ -1694,7 +1697,7 @@ def handler(event, context):
                         Namespace='PG Counter Metrics'
                     )
 
-            if check_table_stat_total_fts_scan:
+            if flag_config.check_table_stat_total_fts_scan:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_total_fts_scan")
                 for k in json_result_table_stat_total_fts_scan:
                     Table_Name = k
@@ -1721,7 +1724,7 @@ def handler(event, context):
                         Namespace='PG Counter Metrics'
                     )
 
-            if check_table_stat_total_idx_scan:
+            if flag_config.check_table_stat_total_idx_scan:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_total_idx_scan")
                 for k in json_result_table_stat_total_idx_scan:
                     Table_Name = k
@@ -1748,7 +1751,7 @@ def handler(event, context):
                         Namespace='PG Counter Metrics'
                     )
 
-            if check_table_stat_seq_tup_read:
+            if flag_config.check_table_stat_seq_tup_read:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_tup_ins")
 
                 for k in json_result_table_stat_seq_tup_read:
@@ -1775,7 +1778,7 @@ def handler(event, context):
                         ],
                         Namespace='PG Counter Metrics'
                     )
-            if check_table_stat_idx_tup_fetch:
+            if flag_config.check_table_stat_idx_tup_fetch:
                 for k in json_result_table_stat_idx_tup_fetch:
                     Table_Name = k
                     idx_tup_fetch = json_result_table_stat_idx_tup_fetch[k]
@@ -1801,7 +1804,7 @@ def handler(event, context):
                         Namespace='PG Counter Metrics'
                     )
 
-            if check_table_stat_n_tup_ins:
+            if flag_config.check_table_stat_n_tup_ins:
                 for k in json_result_table_stat_n_tup_ins:
                     Table_Name = k
                     n_tup_ins = json_result_table_stat_n_tup_ins[k]
@@ -1826,7 +1829,7 @@ def handler(event, context):
                         ],
                         Namespace='PG Counter Metrics'
                     )
-            if check_table_stat_n_tup_upd:
+            if flag_config.check_table_stat_n_tup_upd:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_tup_upd")
                 for k in json_result_table_stat_n_tup_upd:
                     Table_Name = k
@@ -1852,7 +1855,7 @@ def handler(event, context):
                         ],
                         Namespace='PG Counter Metrics'
                     )
-            if check_table_stat_n_tup_del:
+            if flag_config.check_table_stat_n_tup_del:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_tup_del")
                 for k in json_result_table_stat_n_tup_del:
                     Table_Name = k
@@ -1879,7 +1882,7 @@ def handler(event, context):
                         Namespace='PG Counter Metrics'
                     )
 
-            if check_result_table_stat_n_mod_since_analyze:
+            if flag_config.check_result_table_stat_n_mod_since_analyze:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_mod_since_analyze")
                 for k in json_result_table_stat_n_mod_since_analyze:
                     Table_Name = k
@@ -1905,7 +1908,7 @@ def handler(event, context):
                         ],
                         Namespace='PG Counter Metrics'
                     )
-            if check_table_stat_n_tup_hot_upd:
+            if flag_config.check_table_stat_n_tup_hot_upd:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_tup_hot_upd")
                 for k in json_result_table_stat_n_tup_hot_upd:
                     Table_Name = k
@@ -1932,7 +1935,7 @@ def handler(event, context):
                         Namespace='PG Counter Metrics'
                     )
 
-            if check_table_stat_tup_ins_pct:
+            if flag_config.check_table_stat_tup_ins_pct:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_tup_ins_pct")
                 for k in json_result_table_stat_tup_ins_pct:
                     Table_Name = k
@@ -1958,7 +1961,7 @@ def handler(event, context):
                         ],
                         Namespace='PG Counter Metrics'
                     )
-            if check_stat_tup_upd_pct:
+            if flag_config.check_stat_tup_upd_pct:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_tup_upd_pct")
                 for k in json_result_table_stat_tup_upd_pct:
                     Table_Name = k
@@ -1984,7 +1987,7 @@ def handler(event, context):
                         ],
                         Namespace='PG Counter Metrics'
                     )
-            if check_stat_tup_del_pct:
+            if flag_config.check_stat_tup_del_pct:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_tup_del_prct")
                 for k in json_result_table_stat_tup_del_pct:
                     Table_Name = k
@@ -2144,57 +2147,57 @@ def handler(event, context):
                     ],
                     Namespace='PG Counter Metrics'
                 )
+            if flag_config.check_ride_entity_index_stat:
+                for row in result_ride_entity_index_stat:
+                    idxname = row[0]
+                    idx_tup_fetch = row[1]
+                    idx_tup_read = row[2]
 
-            for row in result_ride_entity_index_stat:
-                idxname = row[0]
-                idx_tup_fetch = row[1]
-                idx_tup_read = row[2]
+                    cloudwatch.put_metric_data(
+                        MetricData=[
+                            {
+                                'MetricName': 'ride_entity_index_stat_tup_fetch',
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': 'ride_entity'
+                                    },
+                                    {
+                                        'Name': 'IndexName',
+                                        'Value': idxname
+                                    },
+                                ],
+                                'Unit': 'Count',
+                                'Value': idx_tup_fetch
+                            },
+                            {
+                                'MetricName': 'ride_entity_index_stat_tup_read',
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': 'ride_entity'
+                                    },
+                                    {
+                                        'Name': 'IndexName',
+                                        'Value': idxname
+                                    },
+                                ],
+                                'Unit': 'Count',
+                                'Value': idx_tup_read
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
 
-                cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': 'ride_entity_index_stat_tup_fetch',
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': 'ride_entity'
-                                },
-                                {
-                                    'Name': 'IndexName',
-                                    'Value': idxname
-                                },
-                            ],
-                            'Unit': 'Count',
-                            'Value': idx_tup_fetch
-                        },
-                        {
-                            'MetricName': 'ride_entity_index_stat_tup_read',
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': 'ride_entity'
-                                },
-                                {
-                                    'Name': 'IndexName',
-                                    'Value': idxname
-                                },
-                            ],
-                            'Unit': 'Count',
-                            'Value': idx_tup_read
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
-
-        if check_oldest_open_transaction:
+        if flag_config.check_oldest_open_transaction:
             logger_debug.debug("starting  cloudwatch.put_metric_data.oldest_open_transaction")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2212,7 +2215,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_n_tables_eligible_for_autovacuum:
+        if flag_config.check_n_tables_eligible_for_autovacuum:
             logger_debug.debug("starting  cloudwatch.put_metric_data.n_tables_eligible_for_autovacuum")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2230,7 +2233,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_not_granted_lock:
+        if flag_config.check_not_granted_lock:
             logger_debug.debug("starting  cloudwatch.put_metric_data.not_granted_lock")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2248,7 +2251,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_lock_mode:
+        if flag_config.check_lock_mode:
             logger_debug.debug("starting  cloudwatch.put_metric_data.lock_mode")
             for k in json_result_lock_mode:
                 lock_mode = k
@@ -2270,7 +2273,7 @@ def handler(event, context):
                     ],
                     Namespace='PG Counter Metrics'
                 )
-        if check_lock_type:
+        if flag_config.check_lock_type:
             logger_debug.debug("starting  cloudwatch.put_metric_data.lock_type")
             for k in json_result_lock_type:
                 lock_type = k
@@ -2292,7 +2295,7 @@ def handler(event, context):
                     ],
                     Namespace='PG Counter Metrics'
                 )
-        if check_xact_commit:
+        if flag_config.check_xact_commit:
             logger_debug.debug("starting  cloudwatch.put_metric_data.xact_commit")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2310,7 +2313,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_xact_rollback:
+        if flag_config.check_xact_rollback:
             logger_debug.debug("starting  cloudwatch.put_metric_data.xact_rollback")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2328,7 +2331,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_xact_commit_ratio:
+        if flag_config.check_xact_commit_ratio:
             logger_debug.debug("starting  cloudwatch.put_metric_data.xact_commit_ratio")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2346,7 +2349,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_tup_returned:
+        if flag_config.check_tup_returned:
             logger_debug.debug("starting  cloudwatch.put_metric_data.tup_returned")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2364,7 +2367,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_tup_fetched:
+        if flag_config.check_tup_fetched:
             logger_debug.debug("starting  cloudwatch.put_metric_data.tup_fetched")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2382,7 +2385,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_tup_deleted:
+        if flag_config.check_tup_deleted:
             logger_debug.debug("starting  cloudwatch.put_metric_data.tup_deleted")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2400,7 +2403,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_tup_updated:
+        if flag_config.check_tup_updated:
             logger_debug.debug("starting  cloudwatch.put_metric_data.tup_updated")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2418,7 +2421,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_tup_inserted:
+        if flag_config.check_tup_inserted:
             logger_debug.debug("starting  cloudwatch.put_metric_data.tup_inserted")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2436,7 +2439,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_checkpoints_requested:
+        if flag_config.check_checkpoints_requested:
             logger_debug.debug("starting  cloudwatch.put_metric_data.checkpoints_requested")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2454,7 +2457,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_checkpoints_timed:
+        if flag_config.check_checkpoints_timed:
             logger_debug.debug("starting  cloudwatch.put_metric_data.checkpoints_timed")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2472,7 +2475,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_oldest_replication_slot_lag_gb_behind:
+        if flag_config.check_oldest_replication_slot_lag_gb_behind:
             logger_debug.debug("starting  cloudwatch.put_metric_data.Oldest_Replication_Slot_Lag_gb_behind")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2490,7 +2493,7 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        if check_oldest_open_idl_in_transaction:
+        if flag_config.check_oldest_open_idl_in_transaction:
             logger_debug.debug("starting  cloudwatch.put_metric_data.oldest_open_idl_in_transaction")
             cloudwatch.put_metric_data(
                 MetricData=[
@@ -2509,7 +2512,7 @@ def handler(event, context):
                 Namespace='PG Counter Metrics'
             )
 
-        if check_oldest_replication_slot_lag_gb_behind_per_slot:
+        if flag_config.check_oldest_replication_slot_lag_gb_behind_per_slot:
             logger_debug.debug("starting  cloudwatch.put_metric_data.Oldest_Replication_Slot_Lag_gb_behind_per_slot")
             if result_count_replication_slots[0][0] > 0:
                 for k in json_result_oldest_replication_slot_lag_gb_behind_per_slot:
@@ -3144,7 +3147,7 @@ def handler(event, context):
         #     ],
         #     Namespace='PG Counter Metrics'
         # )
-        if check_autovacuum_multixact_freeze_max_age:
+        if flag_config.check_autovacuum_multixact_freeze_max_age:
             logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_multixact_freeze_max_age")
             cloudwatch.put_metric_data(
                 MetricData=[
