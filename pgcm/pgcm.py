@@ -20,9 +20,8 @@ import tables_config
 import ssl
 import os
 
-
-#rds settings
-rds_host  = rds_config.rds_host
+# rds settings
+rds_host = rds_config.rds_host
 name = rds_config.db_username
 db_name = rds_config.db_name
 region = rds_config.db_region
@@ -30,24 +29,21 @@ port = rds_config.db_port
 auth_type = rds_config.auth_type
 secret_name = rds_config.db_secret_name
 username_password = rds_config.username_password
-metric_name=rds_config.metric_name
+metric_name = rds_config.metric_name
 
-
-
-#tables_config
+# tables_config
 schema_list = tables_config.schema_list
 tables_list = tables_config.tables_list
 
-#DB connection over SSL
-#creating a global SSL context
-#sslctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-#sslctx.load_verify_locations(rds_config.CA_CERT)
+# DB connection over SSL
+# creating a global SSL context
+# sslctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+# sslctx.load_verify_locations(rds_config.CA_CERT)
 # to disable SSL remove # befor sslctx = None
 sslctx = None
 
-
 query_percent_towards_wraparound = "SELECT  ROUND(100*(max(age(datfrozenxid))/2000000000::float)) AS percent_towards_wraparound  from  pg_database ; "
-query_queries_canceled_due_to_lock_timeouts  = "select confl_lock from pg_stat_database_conflicts where datname = (select current_database()); "
+query_queries_canceled_due_to_lock_timeouts = "select confl_lock from pg_stat_database_conflicts where datname = (select current_database()); "
 query_queries_canceled_due_to_lock_deadlocks = "select confl_deadlock from pg_stat_database_conflicts where datname = (select current_database()); "
 query_idle_in_transaction_sessions = "select count (*) from pg_stat_activity where state = 'idle in transaction'; "
 query_idle_sessions = "select count (*) from pg_stat_activity where state = 'idle';"
@@ -55,8 +51,8 @@ query_idle_in_transaction_aborted_sessions = "select count (*) from pg_stat_acti
 query_active_sessions = "select count (*) from pg_stat_activity where state = 'active'; "
 query_Inactive_replication_slots = "select count (*) from pg_replication_slots where active = false; "
 query_invalid_indexes = "select count (*) as count_of_invalid_indxes from pg_index WHERE pg_index.indisvalid = false ; "
-query_deadlocks ="select count (deadlocks) from  pg_stat_database;"
-query_total_connections ="select sum (numbackends) from pg_stat_database;"
+query_deadlocks = "select count (deadlocks) from  pg_stat_database;"
+query_total_connections = "select sum (numbackends) from pg_stat_database;"
 query_max_connections = "SELECT setting::float AS max_connections FROM pg_settings WHERE name = 'max_connections';"
 query_autovacuum_freeze_max_age = "select setting::float AS autovacuum_freeze_max_age FROM pg_catalog.pg_settings WHERE name = 'autovacuum_freeze_max_age';"
 query_oldest_xid = "SELECT max(age(datfrozenxid)) oldest_current_xid FROM pg_database;"
@@ -85,8 +81,8 @@ coalesce(trunc((n_tup_upd::numeric/NULLIF((n_tup_ins::numeric+n_tup_upd::numeric
 coalesce(trunc((n_tup_del::numeric/NULLIF((n_tup_ins::numeric+n_tup_upd::numeric+n_tup_del::numeric),0)) * 100,2),0) as "tup_del_%",
 coalesce(n_tup_hot_upd,0) as n_tup_hot_upd,coalesce(autovacuum_count,0) as autovacuum_count ,coalesce(autoanalyze_count,0) as autoanalyze_count
 from pg_stat_all_tables
-where  schemaname in """ + schema_list +"""
-and relname in """ + tables_list +"""
+where  schemaname in """ + schema_list + """
+and relname in """ + tables_list + """
 ) d ) t;"""
 query_oldest_open_transaction = """select coalesce(round((hs + ms + s)::numeric,2),0) as max_xact_duration_in_s
 from (select
@@ -118,11 +114,11 @@ or
 coalesce(cvbt.value::float, autovacuum_vacuum_threshold::float) + coalesce(cvsf.value::float,autovacuum_vacuum_scale_factor::float) * c.reltuples <= n_dead_tup
 -- or 1 = 1
 )) as s;"""
-query_not_granted_lock  = 'SELECT coalesce(count(*),0) as "not_granted_lock" FROM pg_locks WHERE NOT GRANTED;'
+query_not_granted_lock = 'SELECT coalesce(count(*),0) as "not_granted_lock" FROM pg_locks WHERE NOT GRANTED;'
 query_lock_mode = 'select row_to_json(t) from(select array_to_json(array_agg(row_to_json(d)))  from (SELECT mode as lock_mode , count(*) FROM pg_locks group by mode) d) t ;'
 query_lock_type = 'select row_to_json(t) from(select array_to_json(array_agg(row_to_json(d)))  from (SELECT locktype as lock_type , count(*) FROM pg_locks group by locktype) d) t ;'
 query_xact_commit = 'select xact_commit from  pg_stat_database where datname = (select current_database());'
-query_xact_rollback =  'select xact_rollback from  pg_stat_database where datname = (select current_database());'
+query_xact_rollback = 'select xact_rollback from  pg_stat_database where datname = (select current_database());'
 query_xact_commit_ratio = 'select 100 * xact_commit / (xact_commit + xact_rollback) as commit_ratio from  pg_stat_database where datname = (select current_database());'
 query_tup_returned = 'select tup_returned from  pg_stat_database where datname = (select current_database());'
 query_tup_fetched = 'select tup_fetched from  pg_stat_database where datname = (select current_database());'
@@ -190,8 +186,8 @@ group by wait_event) as c;"""
 query_bgwriter_buffers_clean = 'select buffers_clean from pg_stat_bgwriter;'
 query_bgwriter_buffers_backend = 'select buffers_backend from pg_stat_bgwriter;'
 query_bgwriter_maxwritten_clean = 'select maxwritten_clean from pg_stat_bgwriter;'
-query_oldest_mxid="SELECT max(mxid_age(datminmxid)) oldest_current_mxid FROM pg_database ;"
-query_autovacuum_multixact_freeze_max_age= "select setting::float AS autovacuum_multixact_freeze_max_age FROM pg_catalog.pg_settings WHERE name = 'autovacuum_multixact_freeze_max_age';"
+query_oldest_mxid = "SELECT max(mxid_age(datminmxid)) oldest_current_mxid FROM pg_database ;"
+query_autovacuum_multixact_freeze_max_age = "select setting::float AS autovacuum_multixact_freeze_max_age FROM pg_catalog.pg_settings WHERE name = 'autovacuum_multixact_freeze_max_age';"
 query_index_stat = """SELECT current_database(), nspname AS schemaname, tblname, idxname, bs*(relpages)::bigint AS real_size,
   bs*(relpages-est_pages)::bigint AS extra_size,
   round((100 * (relpages-est_pages)::float / relpages)::numeric, 2) AS extra_pct,
@@ -282,28 +278,29 @@ FROM (
   ) AS rows_hdr_pdg_stats
 ) AS relation_stats
 where nspname in """ + schema_list + """
-and tblname in """ + tables_list +"""
+and tblname in """ + tables_list + """
 ORDER BY bloat_Size desc, nspname, tblname, idxname; """
 
 query_ride_entity_index_stat = """select indexrelname, idx_tup_fetch, idx_tup_read
 from pg_stat_user_indexes where (relname='ride_entity_p_2024t1_sg' OR relname='ride_entity_p_2024t1_other') order by idx_tup_read"""
 
-
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger_debug = logging.getLogger("pgcm")
 logger_debug.setLevel(logging.INFO)
-#To enable the debug mode remove the # from the below line and add # to the above line "logger_debug.setLevel(logging.INFO)"
-#logger_debug.setLevel(logging.DEBUG)
+
+
+# To enable the debug mode remove the # from the below line and add # to the above line "logger_debug.setLevel(logging.INFO)"
+# logger_debug.setLevel(logging.DEBUG)
 
 def handler(event, context):
-    logger.info( "Starting PG metric Process on " + rds_host)
+    logger.info("Starting PG metric Process on " + rds_host)
     # logger.info( "Metric Dimension Name: "+ metric_dimension_name)
-    logger.info( "Database: " + db_name)
-    logger.info( "Database User Name: " + name)
-    logger.info( "Database Port: " + str(port))
-    logger.info( "schema list: " + schema_list)
-    logger.info( "tables list: " + tables_list)
+    logger.info("Database: " + db_name)
+    logger.info("Database User Name: " + name)
+    logger.info("Database Port: " + str(port))
+    logger.info("schema list: " + schema_list)
+    logger.info("tables list: " + tables_list)
     try:
         logger.info("-----------------------------")
         logger.info("Test the database connection")
@@ -314,16 +311,17 @@ def handler(event, context):
             logger_debug.debug("the password: " + token)
         elif auth_type == 'secret_manager':
             logger.info("Using the AWS secret manager to get the password")
-            secretValues=json.loads(get_secret())
+            secretValues = json.loads(get_secret())
             token = secretValues['password']
             logger_debug.debug(secretValues)
             logger_debug.debug("the password: " + token)
         else:
             logger.info("Using the IAM DB authentication to create an authentication token")
-            client = boto3.client("rds",region_name=region)
-            token = client.generate_db_auth_token(rds_host,port, name)
+            client = boto3.client("rds", region_name=region)
+            token = client.generate_db_auth_token(rds_host, port, name)
             logger_debug.debug("the password is " + token)
-        conn = pg8000.dbapi.connect(database=db_name, host=rds_host, user=name, password=token, port=port, ssl_context=sslctx, timeout=10)
+        conn = pg8000.dbapi.connect(database=db_name, host=rds_host, user=name, password=token, port=port,
+                                    ssl_context=sslctx, timeout=10)
     except (Exception) as error:
         logger.error(error)
         putErrorMetric()
@@ -345,19 +343,23 @@ def handler(event, context):
         if (check_queries_canceled_due_to_lock_timeouts):
             logger_debug.debug("Executing result_queries_canceled_due_to_lock_timeouts")
             result_queries_canceled_due_to_lock_timeouts = executeSQL(conn, query_queries_canceled_due_to_lock_timeouts)
-            logger_debug.debug("result_queries_canceled_due_to_lock_timeouts = " + str(result_queries_canceled_due_to_lock_timeouts[0][0]))
+            logger_debug.debug("result_queries_canceled_due_to_lock_timeouts = " + str(
+                result_queries_canceled_due_to_lock_timeouts[0][0]))
 
         check_queries_canceled_due_to_lock_deadlocks = False
         if (check_queries_canceled_due_to_lock_deadlocks):
             logger_debug.debug("Executing result_queries_canceled_due_to_lock_deadlocks")
-            result_queries_canceled_due_to_lock_deadlocks = executeSQL(conn, query_queries_canceled_due_to_lock_deadlocks)
-            logger_debug.debug("result_queries_canceled_due_to_lock_deadlocks = " + str(result_queries_canceled_due_to_lock_deadlocks[0][0]))
+            result_queries_canceled_due_to_lock_deadlocks = executeSQL(conn,
+                                                                       query_queries_canceled_due_to_lock_deadlocks)
+            logger_debug.debug("result_queries_canceled_due_to_lock_deadlocks = " + str(
+                result_queries_canceled_due_to_lock_deadlocks[0][0]))
 
         check_idle_in_transaction_sessions = False
         if (check_idle_in_transaction_sessions):
             logger_debug.debug("Executing result_idle_in_transaction_sessions")
             result_idle_in_transaction_sessions = executeSQL(conn, query_idle_in_transaction_sessions)
-            logger_debug.debug("result_idle_in_transaction_sessions = " + str(result_idle_in_transaction_sessions[0][0]))
+            logger_debug.debug(
+                "result_idle_in_transaction_sessions = " + str(result_idle_in_transaction_sessions[0][0]))
 
         check_idle_sessions = False
         if (check_idle_sessions):
@@ -369,7 +371,8 @@ def handler(event, context):
         if (check_idle_in_transaction_aborted_sessions):
             logger_debug.debug("Executing result_idle_in_transaction_aborted_sessions")
             result_idle_in_transaction_aborted_sessions = executeSQL(conn, query_idle_in_transaction_aborted_sessions)
-            logger_debug.debug("result_idle_in_transaction_aborted_sessions = " + str(result_idle_in_transaction_aborted_sessions[0][0]))
+            logger_debug.debug("result_idle_in_transaction_aborted_sessions = " + str(
+                result_idle_in_transaction_aborted_sessions[0][0]))
 
         check_active_sessions = False
         if (check_active_sessions):
@@ -408,13 +411,14 @@ def handler(event, context):
             logger_debug.debug("result_max_connections = " + str(result_max_connections[0][0]))
 
         check_connections_utilization = False
-        if (check_connections_utilization):
+        if check_connections_utilization:
             logger_debug.debug("Executing result_connections_utilization")
-            result_connections_utilization = round(100*( result_total_connections[0][0] / result_max_connections[0][0]  ),2)
+            result_connections_utilization = round(
+                100 * (result_total_connections[0][0] / result_max_connections[0][0]), 2)
             logger_debug.debug("result_connections_utilization = " + str(result_connections_utilization))
 
         check_autovacuum_freeze_max_age = False
-        if (check_autovacuum_freeze_max_age):
+        if check_autovacuum_freeze_max_age:
             logger_debug.debug("Executing result_autovacuum_freeze_max_age")
             result_autovacuum_freeze_max_age = executeSQL(conn, query_autovacuum_freeze_max_age)
             logger_debug.debug("result_autovacuum_freeze_max_age = " + str(result_autovacuum_freeze_max_age[0][0]))
@@ -425,32 +429,34 @@ def handler(event, context):
             result_oldest_xid = executeSQL(conn, query_oldest_xid)
             logger_debug.debug("result_oldest_xid = " + str(result_oldest_xid[0][0]))
 
-        check_percent_towards_emergency_autovacuum = False
-        if (check_percent_towards_emergency_autovacuum):
+        check_percent_towards_emergency_autovacuum = False and check_autovacuum_freeze_max_age and check_oldest_xid
+        if check_percent_towards_emergency_autovacuum:
             logger_debug.debug("Executing result_percent_towards_emergency_autovacuum")
-            result_percent_towards_emergency_autovacuum  = round(100*( result_oldest_xid[0][0]/result_autovacuum_freeze_max_age[0][0] ),2)
-            logger_debug.debug("result_percent_towards_emergency_autovacuum = " + str(result_percent_towards_emergency_autovacuum))
+            result_percent_towards_emergency_autovacuum = round(
+                100 * (result_oldest_xid[0][0] / result_autovacuum_freeze_max_age[0][0]), 2)
+            logger_debug.debug(
+                "result_percent_towards_emergency_autovacuum = " + str(result_percent_towards_emergency_autovacuum))
 
         check_autovacuum_count_per_min = False
-        if (check_autovacuum_count_per_min):
+        if check_autovacuum_count_per_min:
             logger_debug.debug("Executing result_autovacuum_count_per_min")
             result_autovacuum_count_per_min = executeSQL(conn, query_autovacuum_count_per_min)
             logger_debug.debug("result_autovacuum_count_per_min = " + str(result_autovacuum_count_per_min[0][0]))
 
         check_autovacuum_count_per_hour = False
-        if (check_autovacuum_count_per_hour):
+        if check_autovacuum_count_per_hour:
             logger_debug.debug("Executing result_autovacuum_count_per_hour")
             result_autovacuum_count_per_hour = executeSQL(conn, query_autovacuum_count_per_hour)
             logger_debug.debug("result_autovacuum_count_per_hour = " + str(result_autovacuum_count_per_hour[0][0]))
 
         check_autovacuum_count_per_day = False
-        if (check_autovacuum_count_per_day):
+        if check_autovacuum_count_per_day:
             logger_debug.debug("Executing result_autovacuum_count_per_day")
             result_autovacuum_count_per_day = executeSQL(conn, query_autovacuum_count_per_day)
             logger_debug.debug("result_autovacuum_count_per_day = " + str(result_autovacuum_count_per_day[0][0]))
 
         check_autoanalyze_count_per_min = False
-        if (check_autoanalyze_count_per_min):
+        if check_autoanalyze_count_per_min:
             logger_debug.debug("Executing result_autoanalyze_count_per_min")
             result_autoanalyze_count_per_min = executeSQL(conn, query_autoanalyze_count_per_min)
             logger_debug.debug("result_autoanalyze_count_per_min = " + str(result_autoanalyze_count_per_min[0][0]))
@@ -462,39 +468,41 @@ def handler(event, context):
             logger_debug.debug("result_autoanalyze_count_per_hour = " + str(result_autoanalyze_count_per_hour[0][0]))
 
         check_autoanalyze_count_per_day = False
-        if (check_autoanalyze_count_per_day):
+        if check_autoanalyze_count_per_day:
             logger_debug.debug("Executing result_autoanalyze_count_per_day")
             result_autoanalyze_count_per_day = executeSQL(conn, query_autoanalyze_count_per_day)
             logger_debug.debug("result_autoanalyze_count_per_day = " + str(result_autoanalyze_count_per_day[0][0]))
 
         check_total_db_size_in_gb = False
-        if (check_total_db_size_in_gb):
+        if check_total_db_size_in_gb:
             logger_debug.debug("Executing result_total_DB_size_in_GB")
             result_total_db_size_in_gb = executeSQL(conn, query_total_DB_size_in_GB)
             logger_debug.debug("result_total_DB_size_in_GB = " + str(result_total_db_size_in_gb[0][0]))
 
         check_active_replication_slot = False
-        if (check_active_replication_slot):
+        if check_active_replication_slot:
             logger_debug.debug("Executing result_Active_replication_slot")
             result_active_replication_slot = executeSQL(conn, query_Active_replication_slots)
             logger_debug.debug("result_Active_replication_slot = " + str(result_active_replication_slot[0][0]))
 
         check_blocked_sessions = False
-        if (check_blocked_sessions):
+        if check_blocked_sessions:
             logger_debug.debug("Executing result_blocked_sessions")
             result_blocked_sessions = executeSQL(conn, query_blocked_sessions)
             logger_debug.debug("result_blocked_sessions = " + str(result_blocked_sessions[0][0]))
 
-        logger_debug.debug("Executing result_wait_event")
-        result_wait_event = executeSQL(conn, query_wait_event)
-        json_result_wait_event={}
-        for k in result_wait_event[0] :
-            #logger.info(k)
-            for d in k['array_to_json']:
-                #logger.info(d)
-                json_result_wait_event[d["wait_event"]]=d["count"]
-                #logger.info(json_result_wait_event)
-        logger_debug.debug( "result_wait_event= " + str(json_result_wait_event))
+        check_wait_event = True
+        if check_wait_event:
+            logger_debug.debug("Executing result_wait_event")
+            result_wait_event = executeSQL(conn, query_wait_event)
+            json_result_wait_event = {}
+            for k in result_wait_event[0]:
+                # logger.info(k)
+                for d in k['array_to_json']:
+                    # logger.info(d)
+                    json_result_wait_event[d["wait_event"]] = d["count"]
+                    # logger.info(json_result_wait_event)
+            logger_debug.debug("result_wait_event= " + str(json_result_wait_event))
 
         logger_debug.debug("Executing result_table_stat")
         if len(schema_list) == 0:
@@ -504,314 +512,321 @@ def handler(event, context):
 
             check_table_stat_autovacuum_count = False
             if (check_table_stat_autovacuum_count):
-                json_result_table_stat_autovacuum_count={}
+                json_result_table_stat_autovacuum_count = {}
                 logger_debug.debug("starting result_table_stat_autovacuum_count")
-                for k in result_table_stat[0] :
+                for k in result_table_stat[0]:
                     logger.info(k)
                     for d in k['array_to_json']:
                         logger.info(d)
-                        json_result_table_stat_autovacuum_count[d["Table_Name"]]=d["autovacuum_count"]
+                        json_result_table_stat_autovacuum_count[d["Table_Name"]] = d["autovacuum_count"]
                         logger.info(json_result_table_stat_autovacuum_count)
-                logger_debug.debug( "result_table_stat_autovacuum_count= " + str(json_result_table_stat_autovacuum_count))
+                logger_debug.debug(
+                    "result_table_stat_autovacuum_count= " + str(json_result_table_stat_autovacuum_count))
 
             check_table_stat_autoanalyze_count = False
             if (check_table_stat_autoanalyze_count):
                 logger_debug.debug("starting result_table_stat_autoanalyze_count")
-                json_result_table_stat_autoanalyze_count={}
-                for k in result_table_stat[0] :
+                json_result_table_stat_autoanalyze_count = {}
+                for k in result_table_stat[0]:
                     logger.info(k)
                     for d in k['array_to_json']:
                         logger.info(d)
-                        json_result_table_stat_autoanalyze_count[d["Table_Name"]]=d["autoanalyze_count"]
+                        json_result_table_stat_autoanalyze_count[d["Table_Name"]] = d["autoanalyze_count"]
                         logger.info(json_result_table_stat_autoanalyze_count)
-                logger_debug.debug( "result_table_stat_autoanalyze_count= " + str(json_result_table_stat_autoanalyze_count))
+                logger_debug.debug(
+                    "result_table_stat_autoanalyze_count= " + str(json_result_table_stat_autoanalyze_count))
 
             check_table_stat_n_dead_tup = True
             if (check_table_stat_n_dead_tup):
-                json_result_table_stat_n_dead_tup={}
+                json_result_table_stat_n_dead_tup = {}
                 logger_debug.debug("starting result_table_stat_n_dead_tup")
-                for k in result_table_stat[0] :
-                    #logger.info(k)
+                for k in result_table_stat[0]:
+                    # logger.info(k)
                     for d in k['array_to_json']:
-                        #logger.info(d)
-                        json_result_table_stat_n_dead_tup[d["Table_Name"]]=d["n_dead_tup"]
-                        #logger.info(json_result_table_stat_n_dead_tup)
-                logger_debug.debug( "result_table_stat_n_dead_tup= " + str(json_result_table_stat_n_dead_tup))
+                        # logger.info(d)
+                        json_result_table_stat_n_dead_tup[d["Table_Name"]] = d["n_dead_tup"]
+                        # logger.info(json_result_table_stat_n_dead_tup)
+                logger_debug.debug("result_table_stat_n_dead_tup= " + str(json_result_table_stat_n_dead_tup))
 
             check_table_stat_n_live_tup = True
             if (check_table_stat_n_live_tup):
                 logger_debug.debug("starting result_table_stat_n_live_tup")
-                json_result_table_stat_n_live_tup={}
-                for k in result_table_stat[0] :
-                    #logger.info(k)
+                json_result_table_stat_n_live_tup = {}
+                for k in result_table_stat[0]:
+                    # logger.info(k)
                     for d in k['array_to_json']:
-                        #logger.info(d)
-                        json_result_table_stat_n_live_tup[d["Table_Name"]]=d["n_live_tup"]
-                        #logger.info(json_result_table_stat_n_live_tup)
-                logger_debug.debug( "result_table_stat_n_live_tup= " + str(json_result_table_stat_n_live_tup))
+                        # logger.info(d)
+                        json_result_table_stat_n_live_tup[d["Table_Name"]] = d["n_live_tup"]
+                        # logger.info(json_result_table_stat_n_live_tup)
+                logger_debug.debug("result_table_stat_n_live_tup= " + str(json_result_table_stat_n_live_tup))
 
             check_table_stat_dead_tup_percent = True
             if check_table_stat_dead_tup_percent:
                 logger_debug.debug("starting result_table_stat_dead_tup_percent")
-                json_result_table_stat_dead_tup_percent={}
-                for k in result_table_stat[0] :
-                    #logger.info(k)
+                json_result_table_stat_dead_tup_percent = {}
+                for k in result_table_stat[0]:
+                    # logger.info(k)
                     for d in k['array_to_json']:
-                        #logger.info(d)
-                        json_result_table_stat_dead_tup_percent[d["Table_Name"]]=d["dead_tup_%"]
-                        #logger.info(json_result_table_stat_dead_tup_percent)
-                    logger_debug.debug( "result_table_stat_dead_tup_percent= " + str(json_result_table_stat_dead_tup_percent))
+                        # logger.info(d)
+                        json_result_table_stat_dead_tup_percent[d["Table_Name"]] = d["dead_tup_%"]
+                        # logger.info(json_result_table_stat_dead_tup_percent)
+                    logger_debug.debug(
+                        "result_table_stat_dead_tup_percent= " + str(json_result_table_stat_dead_tup_percent))
 
             check_table_stat_total_fts_scan = True
             if (check_table_stat_total_fts_scan):
                 logger_debug.debug("starting result_table_stat_total_fts_scan")
-                json_result_table_stat_total_fts_scan={}
-                for k in result_table_stat[0] :
-                    #logger.info(k)
+                json_result_table_stat_total_fts_scan = {}
+                for k in result_table_stat[0]:
+                    # logger.info(k)
                     for d in k['array_to_json']:
-                        #logger.info(d)
-                        json_result_table_stat_total_fts_scan[d["Table_Name"]]=d["total_fts_scan"]
-                        #logger.info(json_result_table_stat_total_fts_scan)
-                logger_debug.debug( "result_table_stat_total_fts_scan= " + str(json_result_table_stat_total_fts_scan))
+                        # logger.info(d)
+                        json_result_table_stat_total_fts_scan[d["Table_Name"]] = d["total_fts_scan"]
+                        # logger.info(json_result_table_stat_total_fts_scan)
+                logger_debug.debug("result_table_stat_total_fts_scan= " + str(json_result_table_stat_total_fts_scan))
 
             check_table_stat_total_idx_scan = True
             if (check_table_stat_total_idx_scan):
                 logger_debug.debug("starting result_table_stat_total_idx_scan")
-                json_result_table_stat_total_idx_scan={}
-                for k in result_table_stat[0] :
-                    #logger.info(k)
+                json_result_table_stat_total_idx_scan = {}
+                for k in result_table_stat[0]:
+                    # logger.info(k)
                     for d in k['array_to_json']:
-                        #logger.info(d)
-                        json_result_table_stat_total_idx_scan[d["Table_Name"]]=d["total_idx_scan"]
-                        #logger.info(json_result_table_stat_total_idx_scan)
-                logger_debug.debug( "result_table_stat_total_idx_scan= " + str(json_result_table_stat_total_idx_scan))
+                        # logger.info(d)
+                        json_result_table_stat_total_idx_scan[d["Table_Name"]] = d["total_idx_scan"]
+                        # logger.info(json_result_table_stat_total_idx_scan)
+                logger_debug.debug("result_table_stat_total_idx_scan= " + str(json_result_table_stat_total_idx_scan))
 
             check_table_stat_idx_tup_fetch = True
             if (check_table_stat_idx_tup_fetch):
                 logger_debug.debug("starting result_table_stat_n_tup_ins")
 
-                json_result_table_stat_idx_tup_fetch={}
-                for k in result_table_stat[0] :
+                json_result_table_stat_idx_tup_fetch = {}
+                for k in result_table_stat[0]:
                     for d in k['array_to_json']:
-                        json_result_table_stat_idx_tup_fetch[d["Table_Name"]]=d["idx_tup_fetch"]
+                        json_result_table_stat_idx_tup_fetch[d["Table_Name"]] = d["idx_tup_fetch"]
 
             check_table_stat_seq_tup_read = True
             if (check_table_stat_seq_tup_read):
-                json_result_table_stat_seq_tup_read={}
-                for k in result_table_stat[0] :
+                json_result_table_stat_seq_tup_read = {}
+                for k in result_table_stat[0]:
                     for d in k['array_to_json']:
-                        json_result_table_stat_seq_tup_read[d["Table_Name"]]=d["seq_tup_read"]
+                        json_result_table_stat_seq_tup_read[d["Table_Name"]] = d["seq_tup_read"]
 
             check_table_stat_n_tup_ins = True
             if (check_table_stat_n_tup_ins):
-                json_result_table_stat_n_tup_ins={}
-                for k in result_table_stat[0] :
-                    #logger.info(k)
+                json_result_table_stat_n_tup_ins = {}
+                for k in result_table_stat[0]:
+                    # logger.info(k)
                     for d in k['array_to_json']:
-                        #logger.info(d)
-                        json_result_table_stat_n_tup_ins[d["Table_Name"]]=d["n_tup_ins"]
-                        #logger.info(json_result_table_stat_n_tup_ins)
-                logger_debug.debug( "result_table_stat_n_tup_ins= " + str(json_result_table_stat_n_tup_ins))
+                        # logger.info(d)
+                        json_result_table_stat_n_tup_ins[d["Table_Name"]] = d["n_tup_ins"]
+                        # logger.info(json_result_table_stat_n_tup_ins)
+                logger_debug.debug("result_table_stat_n_tup_ins= " + str(json_result_table_stat_n_tup_ins))
 
             check_table_stat_n_tup_upd = True
             if (check_table_stat_n_tup_upd):
                 logger_debug.debug("starting result_table_stat_n_tup_upd")
-                json_result_table_stat_n_tup_upd={}
-                for k in result_table_stat[0] :
-                    #logger.info(k)
+                json_result_table_stat_n_tup_upd = {}
+                for k in result_table_stat[0]:
+                    # logger.info(k)
                     for d in k['array_to_json']:
-                        #logger.info(d)
-                        json_result_table_stat_n_tup_upd[d["Table_Name"]]=d["n_tup_upd"]
-                        #logger.info(json_result_table_stat_n_tup_upd)
-                logger_debug.debug( "result_table_stat_n_tup_upd= " + str(json_result_table_stat_n_tup_upd))
+                        # logger.info(d)
+                        json_result_table_stat_n_tup_upd[d["Table_Name"]] = d["n_tup_upd"]
+                        # logger.info(json_result_table_stat_n_tup_upd)
+                logger_debug.debug("result_table_stat_n_tup_upd= " + str(json_result_table_stat_n_tup_upd))
 
             check_table_stat_n_tup_del = False
             if (check_table_stat_n_tup_del):
                 logger_debug.debug("starting result_table_stat_n_tup_del")
-                json_result_table_stat_n_tup_del={}
-                for k in result_table_stat[0] :
-                    #logger.info(k)
+                json_result_table_stat_n_tup_del = {}
+                for k in result_table_stat[0]:
+                    # logger.info(k)
                     for d in k['array_to_json']:
-                        #logger.info(d)
-                        json_result_table_stat_n_tup_del[d["Table_Name"]]=d["n_tup_del"]
-                        #logger.info(json_result_table_stat_n_tup_del)
-                logger_debug.debug( "result_table_stat_n_tup_del= " + str(json_result_table_stat_n_tup_del))
+                        # logger.info(d)
+                        json_result_table_stat_n_tup_del[d["Table_Name"]] = d["n_tup_del"]
+                        # logger.info(json_result_table_stat_n_tup_del)
+                logger_debug.debug("result_table_stat_n_tup_del= " + str(json_result_table_stat_n_tup_del))
 
             check_result_table_stat_n_mod_since_analyze = False
             if (check_result_table_stat_n_mod_since_analyze):
                 logger_debug.debug("starting result_table_stat_n_mod_since_analyze")
-                json_result_table_stat_n_mod_since_analyze={}
-                for k in result_table_stat[0] :
+                json_result_table_stat_n_mod_since_analyze = {}
+                for k in result_table_stat[0]:
                     logger.info(k)
                     for d in k['array_to_json']:
                         # logger.info(d)
-                        json_result_table_stat_n_mod_since_analyze[d["Table_Name"]]=d["n_mod_since_analyze"]
+                        json_result_table_stat_n_mod_since_analyze[d["Table_Name"]] = d["n_mod_since_analyze"]
                         # logger.info(json_result_table_stat_n_mod_since_analyze)
-                logger_debug.debug( "result_table_stat_n_mod_since_analyze= " + str(json_result_table_stat_n_mod_since_analyze))
+                logger_debug.debug(
+                    "result_table_stat_n_mod_since_analyze= " + str(json_result_table_stat_n_mod_since_analyze))
 
             check_table_stat_n_tup_hot_upd = False
             if (check_table_stat_n_tup_hot_upd):
                 logger_debug.debug("starting result_table_stat_n_tup_hot_upd")
-                json_result_table_stat_n_tup_hot_upd={}
-                for k in result_table_stat[0] :
+                json_result_table_stat_n_tup_hot_upd = {}
+                for k in result_table_stat[0]:
                     logger.info(k)
                     for d in k['array_to_json']:
                         # logger.info(d)
-                        json_result_table_stat_n_tup_hot_upd[d["Table_Name"]]=d["n_tup_hot_upd"]
+                        json_result_table_stat_n_tup_hot_upd[d["Table_Name"]] = d["n_tup_hot_upd"]
                         # logger.info(json_result_table_stat_n_tup_hot_upd)
-                logger_debug.debug( "result_table_stat_n_tup_hot_upd= " + str(json_result_table_stat_n_tup_hot_upd))
+                logger_debug.debug("result_table_stat_n_tup_hot_upd= " + str(json_result_table_stat_n_tup_hot_upd))
 
             check_table_stat_tup_ins_pct = False
             if (check_table_stat_tup_ins_pct):
                 logger_debug.debug("starting result_table_stat_tup_ins_pct")
-                json_result_table_stat_tup_ins_pct={}
-                for k in result_table_stat[0] :
+                json_result_table_stat_tup_ins_pct = {}
+                for k in result_table_stat[0]:
                     logger.info(k)
                     for d in k['array_to_json']:
                         # logger.info(d)
-                        json_result_table_stat_tup_ins_pct[d["Table_Name"]]=d["tup_ins_%"]
+                        json_result_table_stat_tup_ins_pct[d["Table_Name"]] = d["tup_ins_%"]
                         # logger.info(json_result_table_stat_tup_ins_pct)
-                logger_debug.debug( "result_table_stat_tup_ins_pct= " + str(json_result_table_stat_tup_ins_pct))
+                logger_debug.debug("result_table_stat_tup_ins_pct= " + str(json_result_table_stat_tup_ins_pct))
 
             check_stat_tup_upd_pct = False
             if (check_stat_tup_upd_pct):
                 logger_debug.debug("starting result_table_stat_tup_upd_pct")
-                json_result_table_stat_tup_upd_pct={}
-                for k in result_table_stat[0] :
+                json_result_table_stat_tup_upd_pct = {}
+                for k in result_table_stat[0]:
                     logger.info(k)
                     for d in k['array_to_json']:
                         # logger.info(d)
-                        json_result_table_stat_tup_upd_pct[d["Table_Name"]]=d["tup_upd_%"]
+                        json_result_table_stat_tup_upd_pct[d["Table_Name"]] = d["tup_upd_%"]
                         # logger.info(json_result_table_stat_tup_upd_pct)
-                logger_debug.debug( "result_table_stat_tup_upd_pct= " + str(json_result_table_stat_tup_upd_pct))
+                logger_debug.debug("result_table_stat_tup_upd_pct= " + str(json_result_table_stat_tup_upd_pct))
 
             check_stat_tup_del_pct = False
             if (check_stat_tup_del_pct):
                 logger_debug.debug("starting result_table_stat_tup_del_pct")
-                json_result_table_stat_tup_del_pct={}
-                for k in result_table_stat[0] :
+                json_result_table_stat_tup_del_pct = {}
+                for k in result_table_stat[0]:
                     logger.info(k)
                     for d in k['array_to_json']:
                         # logger.info(d)
-                        json_result_table_stat_tup_del_pct[d["Table_Name"]]=d["tup_del_%"]
+                        json_result_table_stat_tup_del_pct[d["Table_Name"]] = d["tup_del_%"]
                         # logger.info(json_result_table_stat_tup_del_pct)
-                logger_debug.debug( "result_table_stat_tup_del_pct= " + str(json_result_table_stat_tup_del_pct))
+                logger_debug.debug("result_table_stat_tup_del_pct= " + str(json_result_table_stat_tup_del_pct))
 
         check_oldest_open_transaction = False
-        if (check_oldest_open_transaction):
+        if check_oldest_open_transaction:
             logger_debug.debug("Executing result_oldest_open_transaction")
             result_oldest_open_transaction = executeSQL(conn, query_oldest_open_transaction)
             logger_debug.debug("result_oldest_open_transaction = " + str(result_oldest_open_transaction[0][0]))
 
         check_n_tables_eligible_for_autovacuum = False
-        if (check_n_tables_eligible_for_autovacuum):
+        if check_n_tables_eligible_for_autovacuum:
             logger_debug.debug("Executing result_n_tables_eligible_for_autovacuum")
             result_n_tables_eligible_for_autovacuum = executeSQL(conn, query_n_tables_eligible_for_autovacuum)
-            logger_debug.debug("result_n_tables_eligible_for_autovacuum = " + str(result_n_tables_eligible_for_autovacuum[0][0]))
+            logger_debug.debug(
+                "result_n_tables_eligible_for_autovacuum = " + str(result_n_tables_eligible_for_autovacuum[0][0]))
 
         check_not_granted_lock = False
-        if (check_not_granted_lock):
+        if check_not_granted_lock:
             logger_debug.debug("Executing result_not_granted_lock")
-            result_not_granted_lock  = executeSQL(conn, query_not_granted_lock)
+            result_not_granted_lock = executeSQL(conn, query_not_granted_lock)
             logger_debug.debug("result_not_granted_lock = " + str(result_not_granted_lock[0][0]))
 
         check_lock_mode = False
-        if (check_lock_mode):
+        if check_lock_mode:
             logger_debug.debug("Executing result_lock_mode")
             result_lock_mode = executeSQL(conn, query_lock_mode)
-            json_result_lock_mode ={}
-            for k in result_lock_mode[0] :
+            json_result_lock_mode = {}
+            for k in result_lock_mode[0]:
                 logger.info(k)
                 for d in k['array_to_json']:
                     logger.info(d)
-                    json_result_lock_mode[d["lock_mode"]]=d["count"]
+                    json_result_lock_mode[d["lock_mode"]] = d["count"]
                     logger.info(json_result_lock_mode)
-            logger_debug.debug( "result_lock_mode= " + str(json_result_lock_mode))
+            logger_debug.debug("result_lock_mode= " + str(json_result_lock_mode))
 
         check_lock_type = False
-        if (check_lock_type):
+        if check_lock_type:
             logger_debug.debug("Executing result_lock_type")
             result_lock_type = executeSQL(conn, query_lock_type)
-            json_result_lock_type ={}
-            for k in result_lock_type[0] :
+            json_result_lock_type = {}
+            for k in result_lock_type[0]:
                 logger.info(k)
                 for d in k['array_to_json']:
                     logger.info(d)
-                    json_result_lock_type[d["lock_type"]]=d["count"]
+                    json_result_lock_type[d["lock_type"]] = d["count"]
                     logger.info(json_result_lock_type)
-            logger_debug.debug( "result_lock_type= " + str(json_result_lock_type))
+            logger_debug.debug("result_lock_type= " + str(json_result_lock_type))
 
         check_xact_commit = False
-        if (check_xact_commit):
+        if check_xact_commit:
             logger_debug.debug("Executing result_xact_commit")
             result_xact_commit = executeSQL(conn, query_xact_commit)
             logger_debug.debug("result_xact_commit = " + str(result_xact_commit[0][0]))
 
         check_xact_rollback = False
-        if (check_xact_rollback):
+        if check_xact_rollback:
             logger_debug.debug("Executing result_xact_rollback")
             result_xact_rollback = executeSQL(conn, query_xact_rollback)
             logger_debug.debug("result_xact_rollback = " + str(result_xact_rollback[0][0]))
 
         check_xact_commit_ratio = False
-        if (check_xact_commit_ratio):
+        if check_xact_commit_ratio:
             logger_debug.debug("Executing result_xact_commit_ratio")
             result_xact_commit_ratio = executeSQL(conn, query_xact_commit_ratio)
             logger_debug.debug("result_xact_commit_ratio= " + str(result_xact_commit_ratio[0][0]))
 
         check_tup_returned = True
-        if (check_tup_returned):
+        if check_tup_returned:
             logger_debug.debug("Executing result_tup_returned")
             result_tup_returned = executeSQL(conn, query_tup_returned)
             logger_debug.debug("result_tup_returned = " + str(result_tup_returned[0][0]))
 
         check_tup_fetched = True
-        if (check_tup_fetched):
+        if check_tup_fetched:
             logger_debug.debug("Executing result_tup_fetched")
             result_tup_fetched = executeSQL(conn, query_tup_fetched)
             logger_debug.debug("result_tup_fetched = " + str(result_tup_fetched[0][0]))
 
         check_tup_updated = False
-        if (check_tup_updated):
+        if check_tup_updated:
             logger_debug.debug("Executing result_tup_updated")
             result_tup_updated = executeSQL(conn, query_tup_updated)
             logger_debug.debug("result_tup_updated = " + str(result_tup_updated[0][0]))
 
         check_tup_deleted = False
-        if (check_tup_deleted):
+        if check_tup_deleted:
             logger_debug.debug("Executing result_tup_deleted")
             result_tup_deleted = executeSQL(conn, query_tup_deleted)
             logger_debug.debug("result_tup_deleted = " + str(result_tup_deleted[0][0]))
 
         check_tup_inserted = True
-        if (check_tup_inserted):
+        if check_tup_inserted:
             logger_debug.debug("Executing result_tup_inserted")
             result_tup_inserted = executeSQL(conn, query_tup_inserted)
             logger_debug.debug("result_tup_inserted = " + str(result_tup_inserted[0][0]))
 
         check_checkpoints_requested = False
-        if (check_checkpoints_requested):
+        if check_checkpoints_requested:
             logger_debug.debug("Executing result_checkpoints_requested")
             result_checkpoints_requested = executeSQL(conn, query_checkpoints_requested)
             logger_debug.debug("result_checkpoints_requested = " + str(result_checkpoints_requested[0][0]))
 
         check_checkpoints_timed = False
-        if (check_checkpoints_timed):
+        if check_checkpoints_timed:
             logger_debug.debug("Executing result_checkpoints_timed")
             result_checkpoints_timed = executeSQL(conn, query_checkpoints_timed)
             logger_debug.debug("result_checkpoints_timed = " + str(result_checkpoints_timed[0][0]))
 
         check_oldest_replication_slot_lag_gb_behind = False
-        if (check_oldest_replication_slot_lag_gb_behind):
+        if check_oldest_replication_slot_lag_gb_behind:
             logger_debug.debug("Executing result_oldest_replication_slot_lag_gb_behind")
             result_oldest_replication_slot_lag_gb_behind = executeSQL(conn, query_Oldest_Replication_Slot_Lag_gb_behind)
-            logger_debug.debug("result_oldest_replication_slot_lag_gb_behind = " + str(result_oldest_replication_slot_lag_gb_behind[0][0]))
+            logger_debug.debug("result_oldest_replication_slot_lag_gb_behind = " + str(
+                result_oldest_replication_slot_lag_gb_behind[0][0]))
 
         check_oldest_open_idl_in_transaction = False
         if check_oldest_open_idl_in_transaction:
             logger_debug.debug("Executing result_oldest_open_idl_in_transaction")
             result_oldest_open_idl_in_transaction = executeSQL(conn, query_oldest_open_idl_in_transaction)
-            logger_debug.debug("result_oldest_open_idl_in_transaction = " + str(result_oldest_open_idl_in_transaction[0][0]))
+            logger_debug.debug(
+                "result_oldest_open_idl_in_transaction = " + str(result_oldest_open_idl_in_transaction[0][0]))
 
         check_count_replication_slots = False
         if check_count_replication_slots:
@@ -820,21 +835,28 @@ def handler(event, context):
             logger_debug.debug("result_count_replication_slots = " + str(result_count_replication_slots[0][0]))
 
         check_oldest_replication_slot_lag_gb_behind_per_slot = False
-        if (check_oldest_replication_slot_lag_gb_behind_per_slot):
+        if check_oldest_replication_slot_lag_gb_behind_per_slot:
             logger_debug.debug("Executing result_Oldest_Replication_Slot_Lag_gb_behind_per_slot")
-            result_Oldest_Replication_Slot_Lag_gb_behind_per_slot = executeSQL(conn, query_Oldest_Replication_Slot_Lag_gb_behind_per_slot)
+            result_oldest_replication_slot_lag_gb_behind_per_slot = executeSQL(
+                conn,
+                query_Oldest_Replication_Slot_Lag_gb_behind_per_slot
+            )
+
             if result_count_replication_slots[0][0] > 0:
-               json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot={}
-               for k in result_Oldest_Replication_Slot_Lag_gb_behind_per_slot[0] :
-                    #logger.info(k)
+                json_result_oldest_replication_slot_lag_gb_behind_per_slot = {}
+                for k in result_oldest_replication_slot_lag_gb_behind_per_slot[0]:
+                    # logger.info(k)
                     for d in k['array_to_json']:
-                       #logger.info(d)
-                       json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot[d["slot_name"]]=d["oldest_replication_slot_lag_gb_behind"]
-               logger_debug.debug("json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot = " + str(json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot))
+                        # logger.info(d)
+                        json_result_oldest_replication_slot_lag_gb_behind_per_slot[d["slot_name"]] = d[
+                            "oldest_replication_slot_lag_gb_behind"]
+                logger_debug.debug("json_result_oldest_replication_slot_lag_gb_behind_per_slot = " + str(
+                    json_result_oldest_replication_slot_lag_gb_behind_per_slot))
             else:
                 logger_debug.debug("---------> there is no Replication Slots in the Database")
                 pass
 
+        # check pg_stat_statements available
         logger_debug.debug("Executing result_pg_stat_statements_extension")
         result_pg_stat_statements_extension = executeSQL(conn, query_pg_stat_statements_extension)
         logger_debug.debug("result_pg_stat_statements_extension = " + str(result_pg_stat_statements_extension[0][0]))
@@ -846,132 +868,154 @@ def handler(event, context):
         else:
             logger_debug.debug("---------> pg_stat_statements extension is enabled")
             result_pg_stat_statements = executeSQL(conn, query_pg_stat_statements)
-            json_result_pg_stat_statements_calls={}
+            json_result_pg_stat_statements_calls = {}
             logger_debug.debug("starting result_pg_stat_statements_calls")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_calls[d["queryid"]]=d["calls"]
-            logger_debug.debug( "json_result_pg_stat_statements_calls= " + str(json_result_pg_stat_statements_calls))
-            json_result_pg_stat_statements_total_time_msec={}
+                    json_result_pg_stat_statements_calls[d["queryid"]] = d["calls"]
+            logger_debug.debug("json_result_pg_stat_statements_calls= " + str(json_result_pg_stat_statements_calls))
+            json_result_pg_stat_statements_total_time_msec = {}
             logger_debug.debug("starting result_pg_stat_statements_total_time_msec")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_total_time_msec[d["queryid"]]=d["total_time_msec"]
-            logger_debug.debug( "json_result_pg_stat_statements_total_time_msec= " + str(json_result_pg_stat_statements_total_time_msec))
-            json_result_pg_stat_statements_min_time_msec={}
+                    json_result_pg_stat_statements_total_time_msec[d["queryid"]] = d["total_time_msec"]
+            logger_debug.debug("json_result_pg_stat_statements_total_time_msec= " + str(
+                json_result_pg_stat_statements_total_time_msec))
+            json_result_pg_stat_statements_min_time_msec = {}
             logger_debug.debug("starting result_pg_stat_statements_min_time_msec")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_min_time_msec[d["queryid"]]=d["min_time_msec"]
-            logger_debug.debug( "json_result_pg_stat_statements_min_time_msec= " + str(json_result_pg_stat_statements_min_time_msec))
-            json_result_pg_stat_statements_max_time_msec={}
+                    json_result_pg_stat_statements_min_time_msec[d["queryid"]] = d["min_time_msec"]
+            logger_debug.debug(
+                "json_result_pg_stat_statements_min_time_msec= " + str(json_result_pg_stat_statements_min_time_msec)
+            )
+            json_result_pg_stat_statements_max_time_msec = {}
             logger_debug.debug("starting result_pg_stat_statements_max_time_msec")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_max_time_msec[d["queryid"]]=d["max_time_msec"]
-            logger_debug.debug( "json_result_pg_stat_statements_max_time_msec= " + str(json_result_pg_stat_statements_max_time_msec))
-            json_result_pg_stat_statements_avg_time_msec={}
+                    json_result_pg_stat_statements_max_time_msec[d["queryid"]] = d["max_time_msec"]
+            logger_debug.debug(
+                "json_result_pg_stat_statements_max_time_msec= " + str(json_result_pg_stat_statements_max_time_msec)
+            )
+            json_result_pg_stat_statements_avg_time_msec = {}
             logger_debug.debug("starting result_pg_stat_statements_avg_time_msec")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_avg_time_msec[d["queryid"]]=d["avg_time_msec"]
-            logger_debug.debug( "json_result_pg_stat_statements_avg_time_msec= " + str(json_result_pg_stat_statements_avg_time_msec))
-            json_result_pg_stat_statements_stddev_time_msec={}
+                    json_result_pg_stat_statements_avg_time_msec[d["queryid"]] = d["avg_time_msec"]
+            logger_debug.debug(
+                "json_result_pg_stat_statements_avg_time_msec= " + str(json_result_pg_stat_statements_avg_time_msec)
+            )
+            json_result_pg_stat_statements_stddev_time_msec = {}
             logger_debug.debug("starting result_pg_stat_statements_stddev_time_msec")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_stddev_time_msec[d["queryid"]]=d["stddev_time_msec"]
-            logger_debug.debug( "json_result_pg_stat_statements_stddev_time_msec= " + str(json_result_pg_stat_statements_stddev_time_msec))
-            json_result_pg_stat_statements_rows_per_exec={}
+                    json_result_pg_stat_statements_stddev_time_msec[d["queryid"]] = d["stddev_time_msec"]
+            logger_debug.debug("json_result_pg_stat_statements_stddev_time_msec= " + str(
+                json_result_pg_stat_statements_stddev_time_msec))
+            json_result_pg_stat_statements_rows_per_exec = {}
             logger_debug.debug("starting result_pg_stat_statements_rows_per_exec")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_rows_per_exec[d["queryid"]]=d["rows_per_exec"]
-            logger_debug.debug( "json_result_pg_stat_statements_rows_per_exec= " + str(json_result_pg_stat_statements_rows_per_exec))
-            json_result_pg_stat_statements_rows={}
+                    json_result_pg_stat_statements_rows_per_exec[d["queryid"]] = d["rows_per_exec"]
+            logger_debug.debug(
+                "json_result_pg_stat_statements_rows_per_exec= " + str(json_result_pg_stat_statements_rows_per_exec))
+            json_result_pg_stat_statements_rows = {}
             logger_debug.debug("starting result_pg_stat_statements_rows")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_rows[d["queryid"]]=d["rows"]
-            logger_debug.debug( "json_result_pg_stat_statements_rows= " + str(json_result_pg_stat_statements_rows))
-            json_result_pg_stat_statements_db_time_percent={}
+                    json_result_pg_stat_statements_rows[d["queryid"]] = d["rows"]
+            logger_debug.debug("json_result_pg_stat_statements_rows= " + str(json_result_pg_stat_statements_rows))
+            json_result_pg_stat_statements_db_time_percent = {}
             logger_debug.debug("starting result_pg_stat_statements_db_time_percent")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_db_time_percent[d["queryid"]]=d["db_time_percent"]
-            logger_debug.debug( "json_result_pg_stat_statements_db_time_percent= " + str(json_result_pg_stat_statements_db_time_percent))
-            json_result_pg_stat_statements_shared_blks_hit={}
+                    json_result_pg_stat_statements_db_time_percent[d["queryid"]] = d["db_time_percent"]
+            logger_debug.debug("json_result_pg_stat_statements_db_time_percent= " + str(
+                json_result_pg_stat_statements_db_time_percent))
+            json_result_pg_stat_statements_shared_blks_hit = {}
             logger_debug.debug("starting result_pg_stat_statements_shared_blks_hit")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_shared_blks_hit[d["queryid"]]=d["shared_blks_hit"]
-            logger_debug.debug( "json_result_pg_stat_statements_shared_blks_hit= " + str(json_result_pg_stat_statements_shared_blks_hit))
-            json_result_pg_stat_statements_shared_blks_read={}
+                    json_result_pg_stat_statements_shared_blks_hit[d["queryid"]] = d["shared_blks_hit"]
+            logger_debug.debug("json_result_pg_stat_statements_shared_blks_hit= " + str(
+                json_result_pg_stat_statements_shared_blks_hit))
+            json_result_pg_stat_statements_shared_blks_read = {}
             logger_debug.debug("starting result_pg_stat_statements_shared_blks_read")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_shared_blks_read[d["queryid"]]=d["shared_blks_read"]
-            logger_debug.debug( "json_result_pg_stat_statements_shared_blks_read= " + str(json_result_pg_stat_statements_shared_blks_read))
-            json_result_pg_stat_statements_shared_blks_dirtied={}
+                    json_result_pg_stat_statements_shared_blks_read[d["queryid"]] = d["shared_blks_read"]
+            logger_debug.debug("json_result_pg_stat_statements_shared_blks_read= " + str(
+                json_result_pg_stat_statements_shared_blks_read))
+            json_result_pg_stat_statements_shared_blks_dirtied = {}
             logger_debug.debug("starting result_pg_stat_statements_shared_blks_dirtied")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_shared_blks_dirtied[d["queryid"]]=d["shared_blks_dirtied"]
-            logger_debug.debug( "json_result_pg_stat_statements_shared_blks_dirtied= " + str(json_result_pg_stat_statements_shared_blks_dirtied))
-            json_result_pg_stat_statements_shared_blks_written={}
+                    json_result_pg_stat_statements_shared_blks_dirtied[d["queryid"]] = d["shared_blks_dirtied"]
+            logger_debug.debug("json_result_pg_stat_statements_shared_blks_dirtied= " + str(
+                json_result_pg_stat_statements_shared_blks_dirtied))
+            json_result_pg_stat_statements_shared_blks_written = {}
             logger_debug.debug("starting result_pg_stat_statements_shared_blks_written")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_shared_blks_written[d["queryid"]]=d["shared_blks_written"]
-            logger_debug.debug( "json_result_pg_stat_statements_shared_blks_written= " + str(json_result_pg_stat_statements_shared_blks_written))
-            json_result_pg_stat_statements_local_blks_hit={}
+                    json_result_pg_stat_statements_shared_blks_written[d["queryid"]] = d["shared_blks_written"]
+            logger_debug.debug("json_result_pg_stat_statements_shared_blks_written= " + str(
+                json_result_pg_stat_statements_shared_blks_written))
+            json_result_pg_stat_statements_local_blks_hit = {}
             logger_debug.debug("starting result_pg_stat_statements_local_blks_hit")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_local_blks_hit[d["queryid"]]=d["local_blks_hit"]
-            logger_debug.debug( "json_result_pg_stat_statements_local_blks_hit= " + str(json_result_pg_stat_statements_local_blks_hit))
-            json_result_pg_stat_statements_local_blks_read={}
+                    json_result_pg_stat_statements_local_blks_hit[d["queryid"]] = d["local_blks_hit"]
+            logger_debug.debug(
+                "json_result_pg_stat_statements_local_blks_hit= " + str(json_result_pg_stat_statements_local_blks_hit))
+            json_result_pg_stat_statements_local_blks_read = {}
             logger_debug.debug("starting result_pg_stat_statements_local_blks_read")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_local_blks_read[d["queryid"]]=d["local_blks_read"]
-            logger_debug.debug( "json_result_pg_stat_statements_local_blks_read= " + str(json_result_pg_stat_statements_local_blks_read))
-            json_result_pg_stat_statements_local_blks_dirtied={}
+                    json_result_pg_stat_statements_local_blks_read[d["queryid"]] = d["local_blks_read"]
+            logger_debug.debug("json_result_pg_stat_statements_local_blks_read= " + str(
+                json_result_pg_stat_statements_local_blks_read))
+            json_result_pg_stat_statements_local_blks_dirtied = {}
             logger_debug.debug("starting result_pg_stat_statements_local_blks_dirtied")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_local_blks_dirtied[d["queryid"]]=d["local_blks_dirtied"]
-            logger_debug.debug( "json_result_pg_stat_statements_local_blks_dirtied= " + str(json_result_pg_stat_statements_local_blks_dirtied))
-            json_result_pg_stat_statements_local_blks_written={}
+                    json_result_pg_stat_statements_local_blks_dirtied[d["queryid"]] = d["local_blks_dirtied"]
+            logger_debug.debug("json_result_pg_stat_statements_local_blks_dirtied= " + str(
+                json_result_pg_stat_statements_local_blks_dirtied))
+            json_result_pg_stat_statements_local_blks_written = {}
             logger_debug.debug("starting result_pg_stat_statements_local_blks_written")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_local_blks_written[d["queryid"]]=d["local_blks_written"]
-            logger_debug.debug( "json_result_pg_stat_statements_local_blks_written= " + str(json_result_pg_stat_statements_local_blks_written))
-            json_result_pg_stat_statements_temp_blks_read={}
+                    json_result_pg_stat_statements_local_blks_written[d["queryid"]] = d["local_blks_written"]
+            logger_debug.debug("json_result_pg_stat_statements_local_blks_written= " + str(
+                json_result_pg_stat_statements_local_blks_written))
+            json_result_pg_stat_statements_temp_blks_read = {}
             logger_debug.debug("starting result_pg_stat_statements_temp_blks_read")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_temp_blks_read[d["queryid"]]=d["temp_blks_read"]
-            logger_debug.debug( "json_result_pg_stat_statements_temp_blks_read= " + str(json_result_pg_stat_statements_temp_blks_read))
-            json_result_pg_stat_statements_temp_blks_written={}
+                    json_result_pg_stat_statements_temp_blks_read[d["queryid"]] = d["temp_blks_read"]
+            logger_debug.debug(
+                "json_result_pg_stat_statements_temp_blks_read= " + str(json_result_pg_stat_statements_temp_blks_read))
+            json_result_pg_stat_statements_temp_blks_written = {}
             logger_debug.debug("starting result_pg_stat_statements_temp_blks_written")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_temp_blks_written[d["queryid"]]=d["temp_blks_written"]
-            logger_debug.debug( "json_result_pg_stat_statements_temp_blks_written= " + str(json_result_pg_stat_statements_temp_blks_written))
-            json_result_pg_stat_statements_blk_read_time_msec={}
+                    json_result_pg_stat_statements_temp_blks_written[d["queryid"]] = d["temp_blks_written"]
+            logger_debug.debug("json_result_pg_stat_statements_temp_blks_written= " + str(
+                json_result_pg_stat_statements_temp_blks_written))
+            json_result_pg_stat_statements_blk_read_time_msec = {}
             logger_debug.debug("starting result_pg_stat_statements_blk_read_time_msec")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_blk_read_time_msec[d["queryid"]]=d["blk_read_time_msec"]
-            logger_debug.debug( "json_result_pg_stat_statements_blk_read_time_msec= " + str(json_result_pg_stat_statements_blk_read_time_msec))
-            json_result_pg_stat_statements_blk_write_time_msec={}
+                    json_result_pg_stat_statements_blk_read_time_msec[d["queryid"]] = d["blk_read_time_msec"]
+            logger_debug.debug("json_result_pg_stat_statements_blk_read_time_msec= " + str(
+                json_result_pg_stat_statements_blk_read_time_msec))
+            json_result_pg_stat_statements_blk_write_time_msec = {}
             logger_debug.debug("starting result_pg_stat_statements_blk_write_time_msec")
-            for k in result_pg_stat_statements[0] :
+            for k in result_pg_stat_statements[0]:
                 for d in k['array_to_json']:
-                    json_result_pg_stat_statements_blk_write_time_msec[d["queryid"]]=d["blk_write_time_msec"]
-            logger_debug.debug( "json_result_pg_stat_statements_blk_write_time_msec= " + str(json_result_pg_stat_statements_blk_write_time_msec))
+                    json_result_pg_stat_statements_blk_write_time_msec[d["queryid"]] = d["blk_write_time_msec"]
+            logger_debug.debug("json_result_pg_stat_statements_blk_write_time_msec= " + str(
+                json_result_pg_stat_statements_blk_write_time_msec))
         # logger_debug.debug("Executing result_db_load_cpu")
         # result_db_load_cpu = executeSQL(conn, query_db_load_cpu)
         # logger_debug.debug("result_db_load_cpu = " + str(result_db_load_cpu[0][0]))
@@ -996,12 +1040,14 @@ def handler(event, context):
         # result_oldest_mxid = executeSQL(conn, query_oldest_mxid)
         # logger_debug.debug("result_oldest_mxid = " + str(result_oldest_mxid[0][0]))
 
-        logger_debug.debug("Executing result_autovacuum_multixact_freeze_max_age")
-        result_autovacuum_multixact_freeze_max_age = executeSQL(conn, query_autovacuum_multixact_freeze_max_age)
-        logger_debug.debug("result_autovacuum_multixact_freeze_max_age = " + str(result_autovacuum_multixact_freeze_max_age[0][0]))
+        check_autovacuum_multixact_freeze_max_age = False
+        if check_autovacuum_multixact_freeze_max_age:
+            logger_debug.debug("Executing result_autovacuum_multixact_freeze_max_age")
+            result_autovacuum_multixact_freeze_max_age = executeSQL(conn, query_autovacuum_multixact_freeze_max_age)
+            logger_debug.debug(
+                "result_autovacuum_multixact_freeze_max_age = " + str(result_autovacuum_multixact_freeze_max_age[0][0]))
 
         result_index_stat = executeSQL(conn, query_index_stat)
-
         result_ride_entity_index_stat = executeSQL(conn, query_ride_entity_index_stat)
 
         logger.info("------------------------------")
@@ -1466,479 +1512,482 @@ def handler(event, context):
                 ],
                 Namespace='PG Counter Metrics'
             )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.wait_event")
-        for k in json_result_wait_event:
-            wait_event=k
-            wait_event_sample=json_result_wait_event[k]
-            #logger.info(wait_event)
-            cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': "wait_event_"+wait_event ,
-                    'Dimensions': [
+
+        if check_wait_event:
+            logger_debug.debug("starting  cloudwatch.put_metric_data.wait_event")
+            for k in json_result_wait_event:
+                wait_event = k
+                wait_event_sample = json_result_wait_event[k]
+                # logger.info(wait_event)
+                cloudwatch.put_metric_data(
+                    MetricData=[
                         {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
+                            'MetricName': "wait_event_" + wait_event,
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                            ],
+                            'Unit': 'Count',
+                            'Value': wait_event_sample
                         },
                     ],
-                    'Unit': 'Count',
-                    'Value': wait_event_sample
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
+                    Namespace='PG Counter Metrics'
+                )
+
         if len(schema_list) == 0:
             pass
         else:
             if check_table_stat_autovacuum_count:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_autovacuum_count")
                 for k in json_result_table_stat_autovacuum_count:
-                    Table_Name=k
-                    autovacuum_count=json_result_table_stat_autovacuum_count[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    autovacuum_count = json_result_table_stat_autovacuum_count[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_autovacuum_count",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': autovacuum_count
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_autovacuum_count",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': autovacuum_count
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
             if check_table_stat_autoanalyze_count:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_autoanalyze_count")
                 for k in json_result_table_stat_autoanalyze_count:
-                    Table_Name=k
-                    autoanalyze_count=json_result_table_stat_autoanalyze_count[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    autoanalyze_count = json_result_table_stat_autoanalyze_count[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_autoanalyze_count",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': autoanalyze_count
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_autoanalyze_count",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': autoanalyze_count
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
             if check_table_stat_n_dead_tup:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_dead_tup")
                 for k in json_result_table_stat_n_dead_tup:
-                    Table_Name=k
-                    n_dead_tup=json_result_table_stat_n_dead_tup[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    n_dead_tup = json_result_table_stat_n_dead_tup[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_n_dead_tup",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': n_dead_tup
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_n_dead_tup",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': n_dead_tup
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
 
             if check_table_stat_n_live_tup:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_live_tup")
                 for k in json_result_table_stat_n_live_tup:
-                    Table_Name=k
-                    n_live_tup=json_result_table_stat_n_live_tup[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    n_live_tup = json_result_table_stat_n_live_tup[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_n_live_tup",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': n_live_tup
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_n_live_tup",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': n_live_tup
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
 
             if check_table_stat_dead_tup_percent:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_dead_tup_percent")
                 for k in json_result_table_stat_dead_tup_percent:
-                    Table_Name=k
-                    dead_tup_percent=json_result_table_stat_dead_tup_percent[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    dead_tup_percent = json_result_table_stat_dead_tup_percent[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_dead_tup_percent",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Percent',
-                            'Value': dead_tup_percent
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_dead_tup_percent",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Percent',
+                                'Value': dead_tup_percent
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
 
             if check_table_stat_total_fts_scan:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_total_fts_scan")
                 for k in json_result_table_stat_total_fts_scan:
-                    Table_Name=k
-                    total_fts_scan=json_result_table_stat_total_fts_scan[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    total_fts_scan = json_result_table_stat_total_fts_scan[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_total_fts_scan",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': total_fts_scan
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_total_fts_scan",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': total_fts_scan
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
 
             if check_table_stat_total_idx_scan:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_total_idx_scan")
                 for k in json_result_table_stat_total_idx_scan:
-                    Table_Name=k
-                    total_idx_scan=json_result_table_stat_total_idx_scan[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    total_idx_scan = json_result_table_stat_total_idx_scan[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_total_idx_scan",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': total_idx_scan
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_total_idx_scan",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': total_idx_scan
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
 
             if check_table_stat_seq_tup_read:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_tup_ins")
 
                 for k in json_result_table_stat_seq_tup_read:
-                    Table_Name=k
-                    seq_tup_read=json_result_table_stat_seq_tup_read[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    seq_tup_read = json_result_table_stat_seq_tup_read[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_seq_tup_read",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': seq_tup_read
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_seq_tup_read",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': seq_tup_read
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
             if check_table_stat_idx_tup_fetch:
                 for k in json_result_table_stat_idx_tup_fetch:
-                    Table_Name=k
-                    idx_tup_fetch=json_result_table_stat_idx_tup_fetch[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    idx_tup_fetch = json_result_table_stat_idx_tup_fetch[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_idx_tup_fetch",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': idx_tup_fetch
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_idx_tup_fetch",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': idx_tup_fetch
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
 
             if check_table_stat_n_tup_ins:
                 for k in json_result_table_stat_n_tup_ins:
-                    Table_Name=k
-                    n_tup_ins=json_result_table_stat_n_tup_ins[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    n_tup_ins = json_result_table_stat_n_tup_ins[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_n_tup_ins",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': n_tup_ins
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_n_tup_ins",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': n_tup_ins
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
             if check_table_stat_n_tup_upd:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_tup_upd")
                 for k in json_result_table_stat_n_tup_upd:
-                    Table_Name=k
-                    n_tup_upd=json_result_table_stat_n_tup_upd[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    n_tup_upd = json_result_table_stat_n_tup_upd[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_n_tup_upd",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': n_tup_upd
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_n_tup_upd",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': n_tup_upd
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
             if check_table_stat_n_tup_del:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_tup_del")
                 for k in json_result_table_stat_n_tup_del:
-                    Table_Name=k
-                    n_tup_del=json_result_table_stat_n_tup_del[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    n_tup_del = json_result_table_stat_n_tup_del[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_n_tup_del",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': n_tup_del
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_n_tup_del",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': n_tup_del
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
 
             if check_result_table_stat_n_mod_since_analyze:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_mod_since_analyze")
                 for k in json_result_table_stat_n_mod_since_analyze:
-                    Table_Name=k
-                    n_mod_since_analyze=json_result_table_stat_n_mod_since_analyze[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    n_mod_since_analyze = json_result_table_stat_n_mod_since_analyze[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_n_mod_since_analyze",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': n_mod_since_analyze
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_n_mod_since_analyze",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': n_mod_since_analyze
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
             if check_table_stat_n_tup_hot_upd:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_n_tup_hot_upd")
                 for k in json_result_table_stat_n_tup_hot_upd:
-                    Table_Name=k
-                    n_tup_hot_upd=json_result_table_stat_n_tup_hot_upd[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    n_tup_hot_upd = json_result_table_stat_n_tup_hot_upd[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_n_tup_hot_upd",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': n_tup_hot_upd
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_n_tup_hot_upd",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Count',
+                                'Value': n_tup_hot_upd
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
 
             if check_table_stat_tup_ins_pct:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_tup_ins_pct")
                 for k in json_result_table_stat_tup_ins_pct:
-                    Table_Name=k
-                    tup_ins_pct=json_result_table_stat_tup_ins_pct[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    tup_ins_pct = json_result_table_stat_tup_ins_pct[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_tup_ins_pct",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Percent',
-                            'Value': tup_ins_pct
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_tup_ins_pct",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Percent',
+                                'Value': tup_ins_pct
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
             if check_stat_tup_upd_pct:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_tup_upd_pct")
                 for k in json_result_table_stat_tup_upd_pct:
-                    Table_Name=k
-                    tup_upd_pct=json_result_table_stat_tup_upd_pct[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    tup_upd_pct = json_result_table_stat_tup_upd_pct[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_tup_upd_pct",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Percent',
-                            'Value': tup_upd_pct
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_tup_upd_pct",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Percent',
+                                'Value': tup_upd_pct
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
             if check_stat_tup_del_pct:
                 logger_debug.debug("starting  cloudwatch.put_metric_data.table_stat_tup_del_prct")
                 for k in json_result_table_stat_tup_del_pct:
-                    Table_Name=k
-                    tup_del_pct=json_result_table_stat_tup_del_pct[k]
-                    #logger.info(Table_Name)
+                    Table_Name = k
+                    tup_del_pct = json_result_table_stat_tup_del_pct[k]
+                    # logger.info(Table_Name)
                     cloudwatch.put_metric_data(
-                    MetricData=[
-                        {
-                            'MetricName': "table_stat_tup_del_prct",
-                            'Dimensions': [
-                                {
-                                    'Name': 'DBInstanceIdentifier',
-                                    'Value': rds_config.metric_name
-                                },
-                                {
-                                    'Name': 'TableName',
-                                    'Value': Table_Name
-                                }
-                            ],
-                            'Unit': 'Percent',
-                            'Value': tup_del_pct
-                        },
-                    ],
-                    Namespace='PG Counter Metrics'
-                )
+                        MetricData=[
+                            {
+                                'MetricName': "table_stat_tup_del_prct",
+                                'Dimensions': [
+                                    {
+                                        'Name': 'DBInstanceIdentifier',
+                                        'Value': rds_config.metric_name
+                                    },
+                                    {
+                                        'Name': 'TableName',
+                                        'Value': Table_Name
+                                    }
+                                ],
+                                'Unit': 'Percent',
+                                'Value': tup_del_pct
+                            },
+                        ],
+                        Namespace='PG Counter Metrics'
+                    )
 
             for row in result_index_stat:
                 tblname = row[2]
@@ -2180,47 +2229,47 @@ def handler(event, context):
         if check_lock_mode:
             logger_debug.debug("starting  cloudwatch.put_metric_data.lock_mode")
             for k in json_result_lock_mode:
-                lock_mode=k
-                lock_mode_sample=json_result_lock_mode[k]
-                #logger.info(lock_mode)
+                lock_mode = k
+                lock_mode_sample = json_result_lock_mode[k]
+                # logger.info(lock_mode)
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "lock_mode_"+lock_mode ,
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                        ],
-                        'Unit': 'Count',
-                        'Value': lock_mode_sample
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "lock_mode_" + lock_mode,
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                            ],
+                            'Unit': 'Count',
+                            'Value': lock_mode_sample
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
         if check_lock_type:
             logger_debug.debug("starting  cloudwatch.put_metric_data.lock_type")
             for k in json_result_lock_type:
-                lock_type=k
-                lock_type_sample=json_result_lock_type[k]
-                #logger.info(lock_type)
+                lock_type = k
+                lock_type_sample = json_result_lock_type[k]
+                # logger.info(lock_type)
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "lock_type_"+lock_type ,
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                        ],
-                        'Unit': 'Count',
-                        'Value': lock_type_sample
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "lock_type_" + lock_type,
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                            ],
+                            'Unit': 'Count',
+                            'Value': lock_type_sample
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
         if check_xact_commit:
             logger_debug.debug("starting  cloudwatch.put_metric_data.xact_commit")
             cloudwatch.put_metric_data(
@@ -2441,20 +2490,21 @@ def handler(event, context):
         if check_oldest_replication_slot_lag_gb_behind_per_slot:
             logger_debug.debug("starting  cloudwatch.put_metric_data.Oldest_Replication_Slot_Lag_gb_behind_per_slot")
             if result_count_replication_slots[0][0] > 0:
-                for k in json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot:
-                    slot_name=k
-                    oldest_replication_slot_lag_gb_behind=json_result_Oldest_Replication_Slot_Lag_gb_behind_per_slot[k]
+                for k in json_result_oldest_replication_slot_lag_gb_behind_per_slot:
+                    slot_name = k
+                    oldest_replication_slot_lag_gb_behind = json_result_oldest_replication_slot_lag_gb_behind_per_slot[
+                        k]
                     cloudwatch.put_metric_data(
                         MetricData=[
                             {
-                               'MetricName': "Oldest_Replication_Slot_Lag_gb_behind_"+slot_name ,
+                                'MetricName': "Oldest_Replication_Slot_Lag_gb_behind_" + slot_name,
                                 'Dimensions': [
                                     {
                                         'Name': 'DBInstanceIdentifier',
                                         'Value': rds_config.metric_name
                                     },
-                               ],
-                                'Unit': 'Gigabits',
+                                ],
+                                'Unit': 'Gigabytes',
                                 'Value': oldest_replication_slot_lag_gb_behind
                             },
                         ],
@@ -2468,508 +2518,508 @@ def handler(event, context):
         else:
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_calls")
             for k in json_result_pg_stat_statements_calls:
-                queryid=k
-                calls=json_result_pg_stat_statements_calls[k]
+                queryid = k
+                calls = json_result_pg_stat_statements_calls[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_calls",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': calls
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_calls",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': calls
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_total_time_msec")
             for k in json_result_pg_stat_statements_total_time_msec:
-                queryid=k
-                total_time_msec=json_result_pg_stat_statements_total_time_msec[k]
+                queryid = k
+                total_time_msec = json_result_pg_stat_statements_total_time_msec[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_total_time_msec",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Milliseconds',
-                        'Value': total_time_msec
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_total_time_msec",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Milliseconds',
+                            'Value': total_time_msec
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_min_time_msec")
             for k in json_result_pg_stat_statements_min_time_msec:
-                queryid=k
-                min_time_msec=json_result_pg_stat_statements_min_time_msec[k]
+                queryid = k
+                min_time_msec = json_result_pg_stat_statements_min_time_msec[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_min_time_msec",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Milliseconds',
-                        'Value': min_time_msec
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_min_time_msec",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Milliseconds',
+                            'Value': min_time_msec
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_max_time_msec")
             for k in json_result_pg_stat_statements_max_time_msec:
-                queryid=k
-                max_time_msec=json_result_pg_stat_statements_max_time_msec[k]
+                queryid = k
+                max_time_msec = json_result_pg_stat_statements_max_time_msec[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_max_time_msec",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Milliseconds',
-                        'Value': max_time_msec
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_max_time_msec",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Milliseconds',
+                            'Value': max_time_msec
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_avg_time_msec")
             for k in json_result_pg_stat_statements_avg_time_msec:
-                queryid=k
-                avg_time_msec=json_result_pg_stat_statements_avg_time_msec[k]
+                queryid = k
+                avg_time_msec = json_result_pg_stat_statements_avg_time_msec[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_avg_time_msec",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Milliseconds',
-                        'Value': avg_time_msec
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_avg_time_msec",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Milliseconds',
+                            'Value': avg_time_msec
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_stddev_time_msec")
             for k in json_result_pg_stat_statements_stddev_time_msec:
-                queryid=k
-                stddev_time_msec=json_result_pg_stat_statements_stddev_time_msec[k]
+                queryid = k
+                stddev_time_msec = json_result_pg_stat_statements_stddev_time_msec[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_stddev_time_msec",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Milliseconds',
-                        'Value': stddev_time_msec
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_stddev_time_msec",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Milliseconds',
+                            'Value': stddev_time_msec
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_rows_per_exec")
             for k in json_result_pg_stat_statements_rows_per_exec:
-                queryid=k
-                rows_per_exec=json_result_pg_stat_statements_rows_per_exec[k]
+                queryid = k
+                rows_per_exec = json_result_pg_stat_statements_rows_per_exec[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_rows_per_exec",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': rows_per_exec
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_rows_per_exec",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': rows_per_exec
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_rows")
             for k in json_result_pg_stat_statements_rows:
-                queryid=k
-                rows=json_result_pg_stat_statements_rows[k]
+                queryid = k
+                rows = json_result_pg_stat_statements_rows[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_rows",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': rows
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_rows",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': rows
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_db_time_percent")
             for k in json_result_pg_stat_statements_db_time_percent:
-                queryid=k
-                db_time_percent=json_result_pg_stat_statements_db_time_percent[k]
+                queryid = k
+                db_time_percent = json_result_pg_stat_statements_db_time_percent[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_db_time_percent",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Percent',
-                        'Value': db_time_percent
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_db_time_percent",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Percent',
+                            'Value': db_time_percent
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_shared_blks_hit")
             for k in json_result_pg_stat_statements_shared_blks_hit:
-                queryid=k
-                shared_blks_hit=json_result_pg_stat_statements_shared_blks_hit[k]
+                queryid = k
+                shared_blks_hit = json_result_pg_stat_statements_shared_blks_hit[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_shared_blks_hit",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': shared_blks_hit
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_shared_blks_hit",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': shared_blks_hit
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_shared_blks_read")
             for k in json_result_pg_stat_statements_shared_blks_read:
-                queryid=k
-                shared_blks_read=json_result_pg_stat_statements_shared_blks_read[k]
+                queryid = k
+                shared_blks_read = json_result_pg_stat_statements_shared_blks_read[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_shared_blks_read",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': shared_blks_read
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_shared_blks_read",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': shared_blks_read
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_shared_blks_dirtied")
             for k in json_result_pg_stat_statements_shared_blks_dirtied:
-                queryid=k
-                shared_blks_dirtied=json_result_pg_stat_statements_shared_blks_dirtied[k]
+                queryid = k
+                shared_blks_dirtied = json_result_pg_stat_statements_shared_blks_dirtied[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_shared_blks_dirtied",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': shared_blks_dirtied
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_shared_blks_dirtied",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': shared_blks_dirtied
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_shared_blks_written")
             for k in json_result_pg_stat_statements_shared_blks_written:
-                queryid=k
-                shared_blks_written=json_result_pg_stat_statements_shared_blks_written[k]
+                queryid = k
+                shared_blks_written = json_result_pg_stat_statements_shared_blks_written[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_shared_blks_written",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': shared_blks_written
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_shared_blks_written",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': shared_blks_written
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_local_blks_hit")
             for k in json_result_pg_stat_statements_local_blks_hit:
-                queryid=k
-                local_blks_hit=json_result_pg_stat_statements_local_blks_hit[k]
+                queryid = k
+                local_blks_hit = json_result_pg_stat_statements_local_blks_hit[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_local_blks_hit",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': local_blks_hit
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_local_blks_hit",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': local_blks_hit
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_local_blks_read")
             for k in json_result_pg_stat_statements_local_blks_read:
-                queryid=k
-                local_blks_read=json_result_pg_stat_statements_local_blks_read[k]
+                queryid = k
+                local_blks_read = json_result_pg_stat_statements_local_blks_read[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_local_blks_read",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': local_blks_read
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_local_blks_read",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': local_blks_read
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_local_blks_dirtied")
             for k in json_result_pg_stat_statements_local_blks_dirtied:
-                queryid=k
-                local_blks_dirtied=json_result_pg_stat_statements_local_blks_dirtied[k]
+                queryid = k
+                local_blks_dirtied = json_result_pg_stat_statements_local_blks_dirtied[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_local_blks_dirtied",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': local_blks_dirtied
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_local_blks_dirtied",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': local_blks_dirtied
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_local_blks_written")
             for k in json_result_pg_stat_statements_local_blks_written:
-                queryid=k
-                local_blks_written=json_result_pg_stat_statements_local_blks_written[k]
+                queryid = k
+                local_blks_written = json_result_pg_stat_statements_local_blks_written[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_local_blks_written",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': local_blks_written
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_local_blks_written",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': local_blks_written
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_temp_blks_read")
             for k in json_result_pg_stat_statements_temp_blks_read:
-                queryid=k
-                temp_blks_read=json_result_pg_stat_statements_temp_blks_read[k]
+                queryid = k
+                temp_blks_read = json_result_pg_stat_statements_temp_blks_read[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_temp_blks_read",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': temp_blks_read
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_temp_blks_read",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': temp_blks_read
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_temp_blks_written")
             for k in json_result_pg_stat_statements_temp_blks_written:
-                queryid=k
-                temp_blks_written=json_result_pg_stat_statements_temp_blks_written[k]
+                queryid = k
+                temp_blks_written = json_result_pg_stat_statements_temp_blks_written[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_temp_blks_written",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Count',
-                        'Value': temp_blks_written
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_temp_blks_written",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Count',
+                            'Value': temp_blks_written
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_blk_read_time_msec")
             for k in json_result_pg_stat_statements_blk_read_time_msec:
-                queryid=k
-                blk_read_time_msec=json_result_pg_stat_statements_blk_read_time_msec[k]
+                queryid = k
+                blk_read_time_msec = json_result_pg_stat_statements_blk_read_time_msec[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_blk_read_time_msec",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Milliseconds',
-                        'Value': blk_read_time_msec
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_blk_read_time_msec",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Milliseconds',
+                            'Value': blk_read_time_msec
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
             logger_debug.debug("starting  cloudwatch.put_metric_data.pg_stat_statements_blk_write_time_msec")
             for k in json_result_pg_stat_statements_blk_write_time_msec:
-                queryid=k
-                blk_write_time_msec=json_result_pg_stat_statements_blk_write_time_msec[k]
+                queryid = k
+                blk_write_time_msec = json_result_pg_stat_statements_blk_write_time_msec[k]
                 cloudwatch.put_metric_data(
-                MetricData=[
-                    {
-                        'MetricName': "pg_stat_statements_blk_write_time_msec",
-                        'Dimensions': [
-                            {
-                                'Name': 'DBInstanceIdentifier',
-                                'Value': rds_config.metric_name
-                            },
-                            {
-                                'Name': 'QueryId',
-                                'Value': str(queryid)
-                            }
-                        ],
-                        'Unit': 'Milliseconds',
-                        'Value': blk_write_time_msec
-                    },
-                ],
-                Namespace='PG Counter Metrics'
-            )
+                    MetricData=[
+                        {
+                            'MetricName': "pg_stat_statements_blk_write_time_msec",
+                            'Dimensions': [
+                                {
+                                    'Name': 'DBInstanceIdentifier',
+                                    'Value': rds_config.metric_name
+                                },
+                                {
+                                    'Name': 'QueryId',
+                                    'Value': str(queryid)
+                                }
+                            ],
+                            'Unit': 'Milliseconds',
+                            'Value': blk_write_time_msec
+                        },
+                    ],
+                    Namespace='PG Counter Metrics'
+                )
         # logger_debug.debug("starting  cloudwatch.put_metric_data.db_load_cpu")
         # cloudwatch.put_metric_data(
         #     MetricData=[
@@ -3072,23 +3122,24 @@ def handler(event, context):
         #     ],
         #     Namespace='PG Counter Metrics'
         # )
-        logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_multixact_freeze_max_age")
-        cloudwatch.put_metric_data(
-            MetricData=[
-                {
-                    'MetricName': 'autovacuum_multixact_freeze_max_age',
-                    'Dimensions': [
-                        {
-                            'Name': 'DBInstanceIdentifier',
-                            'Value': rds_config.metric_name
-                        },
-                    ],
-                    'Unit': 'Count',
-                    'Value': result_autovacuum_multixact_freeze_max_age[0][0]
-                },
-            ],
-            Namespace='PG Counter Metrics'
-        )
+        if check_autovacuum_multixact_freeze_max_age:
+            logger_debug.debug("starting  cloudwatch.put_metric_data.autovacuum_multixact_freeze_max_age")
+            cloudwatch.put_metric_data(
+                MetricData=[
+                    {
+                        'MetricName': 'autovacuum_multixact_freeze_max_age',
+                        'Dimensions': [
+                            {
+                                'Name': 'DBInstanceIdentifier',
+                                'Value': rds_config.metric_name
+                            },
+                        ],
+                        'Unit': 'Count',
+                        'Value': result_autovacuum_multixact_freeze_max_age[0][0]
+                    },
+                ],
+                Namespace='PG Counter Metrics'
+            )
     except (Exception) as error:
         logger.error(error)
         putErrorMetric()
@@ -3098,6 +3149,7 @@ def handler(event, context):
             conn.close()
     logger.info("SUCCESS: PG Counter Metrics")
     return "SUCCESS: PG Counter Metrics"
+
 
 def executeSQL(connection, sqlString, bindHash={}, supress=False):
     """
@@ -3111,8 +3163,8 @@ def executeSQL(connection, sqlString, bindHash={}, supress=False):
     if sqlString.upper().find("SELECT") == 0:
         isSelect = True
     success = True
-    #statement_timeout in millisecond
-    #It only applies to current session
+    # statement_timeout in millisecond
+    # It only applies to current session
     timeout = 10000;
     timeoutString = "SET statement_timeout = " + str(timeout)
     results = []
@@ -3139,6 +3191,7 @@ def executeSQL(connection, sqlString, bindHash={}, supress=False):
     else:
         return None
 
+
 def putErrorMetric():
     # Create CloudWatch client
     cloudwatch = boto3.client('cloudwatch')
@@ -3159,6 +3212,7 @@ def putErrorMetric():
         ],
         Namespace='PG Counter Metrics'
     )
+
 
 def get_secret():
     logger.info("Secret name: " + secret_name)
