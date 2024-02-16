@@ -333,21 +333,18 @@ def handler(event, context):
         logger.info("Starting the queries execution")
         logger.info("------------------------------")
 
-        check_percent_towards_wraparound = False
 
         if flag_config.check_percent_towards_wraparound:
             logger_debug.debug("Executing result_percent_towards_wraparound")
             result_percent_towards_wraparound = executeSQL(conn, query_percent_towards_wraparound)
             logger_debug.debug("result_percent_towards_wraparound = " + str(result_percent_towards_wraparound[0][0]))
 
-        check_queries_canceled_due_to_lock_timeouts = False
         if flag_config.check_queries_canceled_due_to_lock_timeouts:
             logger_debug.debug("Executing result_queries_canceled_due_to_lock_timeouts")
             result_queries_canceled_due_to_lock_timeouts = executeSQL(conn, query_queries_canceled_due_to_lock_timeouts)
             logger_debug.debug("result_queries_canceled_due_to_lock_timeouts = " + str(
                 result_queries_canceled_due_to_lock_timeouts[0][0]))
 
-        check_queries_canceled_due_to_lock_deadlocks = False
         if flag_config.check_queries_canceled_due_to_lock_deadlocks:
             logger_debug.debug("Executing result_queries_canceled_due_to_lock_deadlocks")
             result_queries_canceled_due_to_lock_deadlocks = executeSQL(conn,
@@ -355,144 +352,121 @@ def handler(event, context):
             logger_debug.debug("result_queries_canceled_due_to_lock_deadlocks = " + str(
                 result_queries_canceled_due_to_lock_deadlocks[0][0]))
 
-        check_idle_in_transaction_sessions = False
         if flag_config.check_idle_in_transaction_sessions:
             logger_debug.debug("Executing result_idle_in_transaction_sessions")
             result_idle_in_transaction_sessions = executeSQL(conn, query_idle_in_transaction_sessions)
             logger_debug.debug(
                 "result_idle_in_transaction_sessions = " + str(result_idle_in_transaction_sessions[0][0]))
 
-        check_idle_sessions = False
         if flag_config.check_idle_sessions:
             logger_debug.debug("Executing result_idle_sessions")
             result_idle_sessions = executeSQL(conn, query_idle_sessions)
             logger_debug.debug("result_idle_sessions = " + str(result_idle_sessions[0][0]))
 
-        check_idle_in_transaction_aborted_sessions = False
         if flag_config.check_idle_in_transaction_aborted_sessions:
             logger_debug.debug("Executing result_idle_in_transaction_aborted_sessions")
             result_idle_in_transaction_aborted_sessions = executeSQL(conn, query_idle_in_transaction_aborted_sessions)
             logger_debug.debug("result_idle_in_transaction_aborted_sessions = " + str(
                 result_idle_in_transaction_aborted_sessions[0][0]))
 
-        check_active_sessions = False
         if flag_config.check_active_sessions:
             logger_debug.debug("Executing result_active_sessions")
             result_active_sessions = executeSQL(conn, query_active_sessions)
             logger_debug.debug("result_active_sessions = " + str(result_active_sessions[0][0]))
 
-        check_inactive_replication_slot = False
         if flag_config.check_inactive_replication_slot:
             logger_debug.debug("Executing result_Inactive_replication_slot")
             result_inactive_replication_slot = executeSQL(conn, query_Inactive_replication_slots)
             logger_debug.debug("result_Inactive_replication_slot = " + str(result_inactive_replication_slot[0][0]))
 
-        check_invalid_indexes = False
         if flag_config.check_invalid_indexes:
             logger_debug.debug("Executing result_invalid_indexes")
             result_invalid_indexes = executeSQL(conn, query_invalid_indexes)
             logger_debug.debug("result_invalid_indexes = " + str(result_invalid_indexes[0][0]))
 
-        check_deadlocks = False
         if flag_config.check_deadlocks:
             logger_debug.debug("Executing result_deadlocks")
             result_deadlocks = executeSQL(conn, query_deadlocks)
             logger_debug.debug("result_deadlocks = " + str(result_deadlocks[0][0]))
 
-        check_total_connections = False
         if flag_config.check_total_connections:
             logger_debug.debug("Executing result_total_connections")
             result_total_connections = executeSQL(conn, query_total_connections)
             logger_debug.debug("result_total_connections = " + str(result_total_connections[0][0]))
 
-        check_max_connections = False
         if flag_config.check_max_connections:
             logger_debug.debug("Executing result_max_connections")
             result_max_connections = executeSQL(conn, query_max_connections)
             logger_debug.debug("result_max_connections = " + str(result_max_connections[0][0]))
 
-        check_connections_utilization = False
         if flag_config.check_connections_utilization:
             logger_debug.debug("Executing result_connections_utilization")
             result_connections_utilization = round(
                 100 * (result_total_connections[0][0] / result_max_connections[0][0]), 2)
             logger_debug.debug("result_connections_utilization = " + str(result_connections_utilization))
 
-        check_autovacuum_freeze_max_age = False
         if flag_config.check_autovacuum_freeze_max_age:
             logger_debug.debug("Executing result_autovacuum_freeze_max_age")
             result_autovacuum_freeze_max_age = executeSQL(conn, query_autovacuum_freeze_max_age)
             logger_debug.debug("result_autovacuum_freeze_max_age = " + str(result_autovacuum_freeze_max_age[0][0]))
 
-        check_oldest_xid = False
         if flag_config.check_oldest_xid:
             logger_debug.debug("Executing result_oldest_xid")
             result_oldest_xid = executeSQL(conn, query_oldest_xid)
             logger_debug.debug("result_oldest_xid = " + str(result_oldest_xid[0][0]))
 
-        check_percent_towards_emergency_autovacuum = False and check_autovacuum_freeze_max_age and check_oldest_xid
-        if flag_config.check_percent_towards_emergency_autovacuum:
+        if flag_config.check_percent_towards_emergency_autovacuum and flag_config.check_autovacuum_freeze_max_age and flag_config.check_oldest_xid:
             logger_debug.debug("Executing result_percent_towards_emergency_autovacuum")
             result_percent_towards_emergency_autovacuum = round(
                 100 * (result_oldest_xid[0][0] / result_autovacuum_freeze_max_age[0][0]), 2)
             logger_debug.debug(
                 "result_percent_towards_emergency_autovacuum = " + str(result_percent_towards_emergency_autovacuum))
 
-        check_autovacuum_count_per_min = False
         if flag_config.check_autovacuum_count_per_min:
             logger_debug.debug("Executing result_autovacuum_count_per_min")
             result_autovacuum_count_per_min = executeSQL(conn, query_autovacuum_count_per_min)
             logger_debug.debug("result_autovacuum_count_per_min = " + str(result_autovacuum_count_per_min[0][0]))
 
-        check_autovacuum_count_per_hour = False
         if flag_config.check_autovacuum_count_per_hour:
             logger_debug.debug("Executing result_autovacuum_count_per_hour")
             result_autovacuum_count_per_hour = executeSQL(conn, query_autovacuum_count_per_hour)
             logger_debug.debug("result_autovacuum_count_per_hour = " + str(result_autovacuum_count_per_hour[0][0]))
 
-        check_autovacuum_count_per_day = False
         if flag_config.check_autovacuum_count_per_day:
             logger_debug.debug("Executing result_autovacuum_count_per_day")
             result_autovacuum_count_per_day = executeSQL(conn, query_autovacuum_count_per_day)
             logger_debug.debug("result_autovacuum_count_per_day = " + str(result_autovacuum_count_per_day[0][0]))
 
-        check_autoanalyze_count_per_min = False
         if flag_config.check_autoanalyze_count_per_min:
             logger_debug.debug("Executing result_autoanalyze_count_per_min")
             result_autoanalyze_count_per_min = executeSQL(conn, query_autoanalyze_count_per_min)
             logger_debug.debug("result_autoanalyze_count_per_min = " + str(result_autoanalyze_count_per_min[0][0]))
 
-        check_autoanalyze_count_per_hour = False
         if flag_config.check_autoanalyze_count_per_hour:
             logger_debug.debug("Executing result_autoanalyze_count_per_hour")
             result_autoanalyze_count_per_hour = executeSQL(conn, query_autoanalyze_count_per_hour)
             logger_debug.debug("result_autoanalyze_count_per_hour = " + str(result_autoanalyze_count_per_hour[0][0]))
 
-        check_autoanalyze_count_per_day = False
         if flag_config.check_autoanalyze_count_per_day:
             logger_debug.debug("Executing result_autoanalyze_count_per_day")
             result_autoanalyze_count_per_day = executeSQL(conn, query_autoanalyze_count_per_day)
             logger_debug.debug("result_autoanalyze_count_per_day = " + str(result_autoanalyze_count_per_day[0][0]))
 
-        check_total_db_size_in_gb = False
         if flag_config.check_total_db_size_in_gb:
             logger_debug.debug("Executing result_total_DB_size_in_GB")
             result_total_db_size_in_gb = executeSQL(conn, query_total_DB_size_in_GB)
             logger_debug.debug("result_total_DB_size_in_GB = " + str(result_total_db_size_in_gb[0][0]))
 
-        check_active_replication_slot = False
         if flag_config.check_active_replication_slot:
             logger_debug.debug("Executing result_Active_replication_slot")
             result_active_replication_slot = executeSQL(conn, query_Active_replication_slots)
             logger_debug.debug("result_Active_replication_slot = " + str(result_active_replication_slot[0][0]))
 
-        check_blocked_sessions = False
         if flag_config.check_blocked_sessions:
             logger_debug.debug("Executing result_blocked_sessions")
             result_blocked_sessions = executeSQL(conn, query_blocked_sessions)
             logger_debug.debug("result_blocked_sessions = " + str(result_blocked_sessions[0][0]))
 
-        check_wait_event = True
         if flag_config.check_wait_event:
             logger_debug.debug("Executing result_wait_event")
             result_wait_event = executeSQL(conn, query_wait_event)
@@ -511,7 +485,6 @@ def handler(event, context):
         else:
             result_table_stat = executeSQL(conn, query_table_stat)
 
-            check_table_stat_autovacuum_count = False
             if flag_config.check_table_stat_autovacuum_count:
                 json_result_table_stat_autovacuum_count = {}
                 logger_debug.debug("starting result_table_stat_autovacuum_count")
@@ -524,7 +497,6 @@ def handler(event, context):
                 logger_debug.debug(
                     "result_table_stat_autovacuum_count= " + str(json_result_table_stat_autovacuum_count))
 
-            check_table_stat_autoanalyze_count = False
             if flag_config.check_table_stat_autoanalyze_count:
                 logger_debug.debug("starting result_table_stat_autoanalyze_count")
                 json_result_table_stat_autoanalyze_count = {}
@@ -537,7 +509,6 @@ def handler(event, context):
                 logger_debug.debug(
                     "result_table_stat_autoanalyze_count= " + str(json_result_table_stat_autoanalyze_count))
 
-            check_table_stat_n_dead_tup = True
             if flag_config.check_table_stat_n_dead_tup:
                 json_result_table_stat_n_dead_tup = {}
                 logger_debug.debug("starting result_table_stat_n_dead_tup")
@@ -549,7 +520,6 @@ def handler(event, context):
                         # logger.info(json_result_table_stat_n_dead_tup)
                 logger_debug.debug("result_table_stat_n_dead_tup= " + str(json_result_table_stat_n_dead_tup))
 
-            check_table_stat_n_live_tup = True
             if flag_config.check_table_stat_n_live_tup:
                 logger_debug.debug("starting result_table_stat_n_live_tup")
                 json_result_table_stat_n_live_tup = {}
@@ -561,7 +531,6 @@ def handler(event, context):
                         # logger.info(json_result_table_stat_n_live_tup)
                 logger_debug.debug("result_table_stat_n_live_tup= " + str(json_result_table_stat_n_live_tup))
 
-            check_table_stat_dead_tup_percent = True
             if flag_config.check_table_stat_dead_tup_percent:
                 logger_debug.debug("starting result_table_stat_dead_tup_percent")
                 json_result_table_stat_dead_tup_percent = {}
@@ -574,7 +543,6 @@ def handler(event, context):
                     logger_debug.debug(
                         "result_table_stat_dead_tup_percent= " + str(json_result_table_stat_dead_tup_percent))
 
-            check_table_stat_total_fts_scan = True
             if flag_config.check_table_stat_total_fts_scan:
                 logger_debug.debug("starting result_table_stat_total_fts_scan")
                 json_result_table_stat_total_fts_scan = {}
@@ -586,7 +554,6 @@ def handler(event, context):
                         # logger.info(json_result_table_stat_total_fts_scan)
                 logger_debug.debug("result_table_stat_total_fts_scan= " + str(json_result_table_stat_total_fts_scan))
 
-            check_table_stat_total_idx_scan = True
             if flag_config.check_table_stat_total_idx_scan:
                 logger_debug.debug("starting result_table_stat_total_idx_scan")
                 json_result_table_stat_total_idx_scan = {}
@@ -598,7 +565,6 @@ def handler(event, context):
                         # logger.info(json_result_table_stat_total_idx_scan)
                 logger_debug.debug("result_table_stat_total_idx_scan= " + str(json_result_table_stat_total_idx_scan))
 
-            check_table_stat_idx_tup_fetch = True
             if flag_config.check_table_stat_idx_tup_fetch:
                 logger_debug.debug("starting result_table_stat_n_tup_ins")
 
@@ -607,14 +573,12 @@ def handler(event, context):
                     for d in k['array_to_json']:
                         json_result_table_stat_idx_tup_fetch[d["Table_Name"]] = d["idx_tup_fetch"]
 
-            check_table_stat_seq_tup_read = True
             if flag_config.check_table_stat_seq_tup_read:
                 json_result_table_stat_seq_tup_read = {}
                 for k in result_table_stat[0]:
                     for d in k['array_to_json']:
                         json_result_table_stat_seq_tup_read[d["Table_Name"]] = d["seq_tup_read"]
 
-            check_table_stat_n_tup_ins = True
             if flag_config.check_table_stat_n_tup_ins:
                 json_result_table_stat_n_tup_ins = {}
                 for k in result_table_stat[0]:
@@ -625,7 +589,6 @@ def handler(event, context):
                         # logger.info(json_result_table_stat_n_tup_ins)
                 logger_debug.debug("result_table_stat_n_tup_ins= " + str(json_result_table_stat_n_tup_ins))
 
-            check_table_stat_n_tup_upd = True
             if flag_config.check_table_stat_n_tup_upd:
                 logger_debug.debug("starting result_table_stat_n_tup_upd")
                 json_result_table_stat_n_tup_upd = {}
@@ -637,7 +600,6 @@ def handler(event, context):
                         # logger.info(json_result_table_stat_n_tup_upd)
                 logger_debug.debug("result_table_stat_n_tup_upd= " + str(json_result_table_stat_n_tup_upd))
 
-            check_table_stat_n_tup_del = False
             if flag_config.check_table_stat_n_tup_del:
                 logger_debug.debug("starting result_table_stat_n_tup_del")
                 json_result_table_stat_n_tup_del = {}
@@ -649,7 +611,6 @@ def handler(event, context):
                         # logger.info(json_result_table_stat_n_tup_del)
                 logger_debug.debug("result_table_stat_n_tup_del= " + str(json_result_table_stat_n_tup_del))
 
-            check_result_table_stat_n_mod_since_analyze = False
             if flag_config.check_result_table_stat_n_mod_since_analyze:
                 logger_debug.debug("starting result_table_stat_n_mod_since_analyze")
                 json_result_table_stat_n_mod_since_analyze = {}
@@ -662,7 +623,6 @@ def handler(event, context):
                 logger_debug.debug(
                     "result_table_stat_n_mod_since_analyze= " + str(json_result_table_stat_n_mod_since_analyze))
 
-            check_table_stat_n_tup_hot_upd = False
             if flag_config.check_table_stat_n_tup_hot_upd:
                 logger_debug.debug("starting result_table_stat_n_tup_hot_upd")
                 json_result_table_stat_n_tup_hot_upd = {}
@@ -674,7 +634,6 @@ def handler(event, context):
                         # logger.info(json_result_table_stat_n_tup_hot_upd)
                 logger_debug.debug("result_table_stat_n_tup_hot_upd= " + str(json_result_table_stat_n_tup_hot_upd))
 
-            check_table_stat_tup_ins_pct = False
             if flag_config.check_table_stat_tup_ins_pct:
                 logger_debug.debug("starting result_table_stat_tup_ins_pct")
                 json_result_table_stat_tup_ins_pct = {}
@@ -686,7 +645,6 @@ def handler(event, context):
                         # logger.info(json_result_table_stat_tup_ins_pct)
                 logger_debug.debug("result_table_stat_tup_ins_pct= " + str(json_result_table_stat_tup_ins_pct))
 
-            check_stat_tup_upd_pct = False
             if flag_config.check_stat_tup_upd_pct:
                 logger_debug.debug("starting result_table_stat_tup_upd_pct")
                 json_result_table_stat_tup_upd_pct = {}
@@ -698,7 +656,6 @@ def handler(event, context):
                         # logger.info(json_result_table_stat_tup_upd_pct)
                 logger_debug.debug("result_table_stat_tup_upd_pct= " + str(json_result_table_stat_tup_upd_pct))
 
-            check_stat_tup_del_pct = False
             if flag_config.check_stat_tup_del_pct:
                 logger_debug.debug("starting result_table_stat_tup_del_pct")
                 json_result_table_stat_tup_del_pct = {}
@@ -710,26 +667,22 @@ def handler(event, context):
                         # logger.info(json_result_table_stat_tup_del_pct)
                 logger_debug.debug("result_table_stat_tup_del_pct= " + str(json_result_table_stat_tup_del_pct))
 
-        check_oldest_open_transaction = False
         if flag_config.check_oldest_open_transaction:
             logger_debug.debug("Executing result_oldest_open_transaction")
             result_oldest_open_transaction = executeSQL(conn, query_oldest_open_transaction)
             logger_debug.debug("result_oldest_open_transaction = " + str(result_oldest_open_transaction[0][0]))
 
-        check_n_tables_eligible_for_autovacuum = False
         if flag_config.check_n_tables_eligible_for_autovacuum:
             logger_debug.debug("Executing result_n_tables_eligible_for_autovacuum")
             result_n_tables_eligible_for_autovacuum = executeSQL(conn, query_n_tables_eligible_for_autovacuum)
             logger_debug.debug(
                 "result_n_tables_eligible_for_autovacuum = " + str(result_n_tables_eligible_for_autovacuum[0][0]))
 
-        check_not_granted_lock = False
         if flag_config.check_not_granted_lock:
             logger_debug.debug("Executing result_not_granted_lock")
             result_not_granted_lock = executeSQL(conn, query_not_granted_lock)
             logger_debug.debug("result_not_granted_lock = " + str(result_not_granted_lock[0][0]))
 
-        check_lock_mode = False
         if flag_config.check_lock_mode:
             logger_debug.debug("Executing result_lock_mode")
             result_lock_mode = executeSQL(conn, query_lock_mode)
@@ -742,7 +695,6 @@ def handler(event, context):
                     logger.info(json_result_lock_mode)
             logger_debug.debug("result_lock_mode= " + str(json_result_lock_mode))
 
-        check_lock_type = False
         if flag_config.check_lock_type:
             logger_debug.debug("Executing result_lock_type")
             result_lock_type = executeSQL(conn, query_lock_type)
@@ -755,87 +707,73 @@ def handler(event, context):
                     logger.info(json_result_lock_type)
             logger_debug.debug("result_lock_type= " + str(json_result_lock_type))
 
-        check_xact_commit = False
         if flag_config.check_xact_commit:
             logger_debug.debug("Executing result_xact_commit")
             result_xact_commit = executeSQL(conn, query_xact_commit)
             logger_debug.debug("result_xact_commit = " + str(result_xact_commit[0][0]))
 
-        check_xact_rollback = False
         if flag_config.check_xact_rollback:
             logger_debug.debug("Executing result_xact_rollback")
             result_xact_rollback = executeSQL(conn, query_xact_rollback)
             logger_debug.debug("result_xact_rollback = " + str(result_xact_rollback[0][0]))
 
-        check_xact_commit_ratio = False
         if flag_config.check_xact_commit_ratio:
             logger_debug.debug("Executing result_xact_commit_ratio")
             result_xact_commit_ratio = executeSQL(conn, query_xact_commit_ratio)
             logger_debug.debug("result_xact_commit_ratio= " + str(result_xact_commit_ratio[0][0]))
 
-        check_tup_returned = True
         if flag_config.check_tup_returned:
             logger_debug.debug("Executing result_tup_returned")
             result_tup_returned = executeSQL(conn, query_tup_returned)
             logger_debug.debug("result_tup_returned = " + str(result_tup_returned[0][0]))
 
-        check_tup_fetched = True
         if flag_config.check_tup_fetched:
             logger_debug.debug("Executing result_tup_fetched")
             result_tup_fetched = executeSQL(conn, query_tup_fetched)
             logger_debug.debug("result_tup_fetched = " + str(result_tup_fetched[0][0]))
 
-        check_tup_updated = False
         if flag_config.check_tup_updated:
             logger_debug.debug("Executing result_tup_updated")
             result_tup_updated = executeSQL(conn, query_tup_updated)
             logger_debug.debug("result_tup_updated = " + str(result_tup_updated[0][0]))
 
-        check_tup_deleted = False
         if flag_config.check_tup_deleted:
             logger_debug.debug("Executing result_tup_deleted")
             result_tup_deleted = executeSQL(conn, query_tup_deleted)
             logger_debug.debug("result_tup_deleted = " + str(result_tup_deleted[0][0]))
 
-        check_tup_inserted = True
         if flag_config.check_tup_inserted:
             logger_debug.debug("Executing result_tup_inserted")
             result_tup_inserted = executeSQL(conn, query_tup_inserted)
             logger_debug.debug("result_tup_inserted = " + str(result_tup_inserted[0][0]))
 
-        check_checkpoints_requested = False
         if flag_config.check_checkpoints_requested:
             logger_debug.debug("Executing result_checkpoints_requested")
             result_checkpoints_requested = executeSQL(conn, query_checkpoints_requested)
             logger_debug.debug("result_checkpoints_requested = " + str(result_checkpoints_requested[0][0]))
 
-        check_checkpoints_timed = False
         if flag_config.check_checkpoints_timed:
             logger_debug.debug("Executing result_checkpoints_timed")
             result_checkpoints_timed = executeSQL(conn, query_checkpoints_timed)
             logger_debug.debug("result_checkpoints_timed = " + str(result_checkpoints_timed[0][0]))
 
-        check_oldest_replication_slot_lag_gb_behind = False
         if flag_config.check_oldest_replication_slot_lag_gb_behind:
             logger_debug.debug("Executing result_oldest_replication_slot_lag_gb_behind")
             result_oldest_replication_slot_lag_gb_behind = executeSQL(conn, query_Oldest_Replication_Slot_Lag_gb_behind)
             logger_debug.debug("result_oldest_replication_slot_lag_gb_behind = " + str(
                 result_oldest_replication_slot_lag_gb_behind[0][0]))
 
-        check_oldest_open_idl_in_transaction = False
         if flag_config.check_oldest_open_idl_in_transaction:
             logger_debug.debug("Executing result_oldest_open_idl_in_transaction")
             result_oldest_open_idl_in_transaction = executeSQL(conn, query_oldest_open_idl_in_transaction)
             logger_debug.debug(
                 "result_oldest_open_idl_in_transaction = " + str(result_oldest_open_idl_in_transaction[0][0]))
 
-        check_count_replication_slots = False
         if flag_config.check_count_replication_slots:
             logger_debug.debug("Executing result_count_replication_slots")
             result_count_replication_slots = executeSQL(conn, query_count_replication_slots)
             logger_debug.debug("result_count_replication_slots = " + str(result_count_replication_slots[0][0]))
 
-        check_oldest_replication_slot_lag_gb_behind_per_slot = False
         if flag_config.check_oldest_replication_slot_lag_gb_behind_per_slot:
             logger_debug.debug("Executing result_Oldest_Replication_Slot_Lag_gb_behind_per_slot")
             result_oldest_replication_slot_lag_gb_behind_per_slot = executeSQL(
@@ -1041,7 +979,6 @@ def handler(event, context):
         # result_oldest_mxid = executeSQL(conn, query_oldest_mxid)
         # logger_debug.debug("result_oldest_mxid = " + str(result_oldest_mxid[0][0]))
 
-        check_autovacuum_multixact_freeze_max_age = False
         if flag_config.check_autovacuum_multixact_freeze_max_age:
             logger_debug.debug("Executing result_autovacuum_multixact_freeze_max_age")
             result_autovacuum_multixact_freeze_max_age = executeSQL(conn, query_autovacuum_multixact_freeze_max_age)
@@ -1049,7 +986,6 @@ def handler(event, context):
                 "result_autovacuum_multixact_freeze_max_age = " + str(result_autovacuum_multixact_freeze_max_age[0][0]))
 
         result_index_stat = executeSQL(conn, query_index_stat)
-        check_ride_entity_index_stat = db_name == "tada_ride_service"
         if flag_config.check_ride_entity_index_stat:
             result_ride_entity_index_stat = executeSQL(conn, query_ride_entity_index_stat)
 
