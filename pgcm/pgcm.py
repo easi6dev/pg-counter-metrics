@@ -283,12 +283,12 @@ and tblname in """ + tables_list + """
 ORDER BY bloat_Size desc, nspname, tblname, idxname; """
 
 query_ride_entity_index_stat = """select indexrelname, idx_tup_fetch, idx_tup_read
-    from pg_stat_user_indexes where (relname='ride_entity_p_2024t1_sg' OR relname='ride_entity_p_2024t1_other') order by idx_tup_read"""
+    from pg_stat_user_indexes where (relname='ride_entity_p_2024t2') order by idx_tup_read"""
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger_debug = logging.getLogger("pgcm")
-logger_debug.setLevel(logging.INFO)
+logger_debug.setLevel(logging.DEBUG)
 
 
 # To enable the debug mode remove the # from the below line and add # to the above line "logger_debug.setLevel(logging.INFO)"

@@ -3,7 +3,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-#ver variable need to be changed with each new version 
+#ver variable need to be changed with each new version
 ver=1.8
 
 
@@ -17,7 +17,7 @@ if [ -f $ZIP_FILE ]; then
 	rm -rf $ZIP_FILE
 fi
 
-cmd="zip -r $ZIP_FILE pgcm.py rds_config.py tables_config.py scramp/  pg8000/ certs/ asn1crypto/"
+cmd="zip -r $ZIP_FILE pgcm.py rds_config.py tables_config.py flag_config.py scramp/  pg8000/ certs/ asn1crypto/"
 echo " "
 echo $cmd
 echo " "
