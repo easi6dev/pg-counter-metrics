@@ -173,7 +173,7 @@ round(blk_write_time::numeric, 2) as "blk_write_time_msec"
 FROM pg_stat_statements pss
 JOIN pg_database pd ON pss.dbid = pd.oid
 JOIN pg_roles pr ON pss.userid = pr.oid
-WHERE pd.datname ='tada_ride_service' AND pr.rolname = 'postgreadmin'
+WHERE pd.datname ='tada_ride_service' AND pr.rolname = 'tadaservice'
 ORDER BY db_time_percent DESC LIMIT 50 ) d ) t;"""
 query_pg_stat_statements_extension = "select count (*) FROM pg_catalog.pg_extension  where extname = 'pg_stat_statements';"
 query_db_load_cpu = """select coalesce(count(*),'0') as  count_of_sessions_waiting_on_CPU
