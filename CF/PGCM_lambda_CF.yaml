@@ -63,7 +63,7 @@ Parameters:
     Type: AWS::EC2::VPC::Id   
   LambdaSecurityGroupID:
     Description: Select the Security Group to use for the Lambda-functions  
-    Type: AWS::EC2::SecurityGroup::Id
+    Type: List<AWS::EC2::SecurityGroup::Id>
   LambdaSubnetID:
     Description: Choose which subnets the Lambda-functions should be deployed to 
     Type: List<AWS::EC2::Subnet::Id>
@@ -87,9 +87,9 @@ Resources:
     Type: AWS::Serverless::Function
     Condition: AuthenticationTypeisPwOrIamdb
     Properties:
-      FunctionName: !Sub ${DBInstanceIdentifier}_pgcm
+      FunctionName: !Sub ${DBInstanceIdentifier}_${DatabaseName}_pgcm
       Handler: pgcm.handler
-      Runtime: python3.7
+      Runtime: python3.12
       CodeUri: 
         Bucket: !Ref S3Bucket
         Key: !Ref S3Key
@@ -116,8 +116,7 @@ Resources:
             Schedule: 'rate(1 minute)'
             Enabled: true
       VpcConfig:
-        SecurityGroupIds: 
-          - !Ref LambdaSecurityGroupID
+        SecurityGroupIds: !Ref LambdaSecurityGroupID
         SubnetIds: !Ref LambdaSubnetID          
   LambdaExecutionRole:
     Type: "AWS::IAM::Role"
@@ -170,7 +169,7 @@ Resources:
     Properties:
       FunctionName: !Sub ${DBInstanceIdentifier}_pgcm
       Handler: pgcm.handler
-      Runtime: python3.7
+      Runtime: python3.12
       CodeUri: 
         Bucket: !Ref S3Bucket
         Key: !Ref S3Key
@@ -185,7 +184,7 @@ Resources:
           DB_USERNAME: !Ref DatabaseUser
           DB_PORT: !Ref DBPort
           RDS_ENDPOINT: !Ref DBEndpoint
-          DB_INSATCNE_IDENTIFIER: !Ref DBInstanceIdentifier
+          DB_INSTANCE_IDENTIFIER: !Ref DBInstanceIdentifier
           AUTHENTICATION_TYPE: !Ref AuthenticationType
           SCHEMA_LIST: !Ref SchemaList
           TABLES_LIST: !Ref TablesList
